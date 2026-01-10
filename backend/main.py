@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, Request, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from sqlalchemy import Column, Integer, String, Text, create_engine
+from sqlalchemy import Column, Integer, String, Text, Boolean, create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -96,6 +96,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     email: str
+    is_admin: bool
     class Config:
         from_attributes = True
 
@@ -124,6 +125,11 @@ class DonationResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+class ProfileResponse(BaseModel):
+    user: UserResponse
+    donations: List[DonationResponse]
+    total_donations: int
 
 # -------------------------------------------------
 # DATABASE SETUP (DB IN PROJECT FOLDER)
@@ -170,6 +176,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String)
+    is_admin = Column(Boolean, default=False)
 
 class Donation(Base):
     __tablename__ = "donations"
@@ -195,6 +202,7 @@ def get_db():
     finally:
         db.close()
 
+
 def get_current_user(request: Request, db: Session = Depends(get_db)):
     user_id = request.session.get("user_id")
     if not user_id:
@@ -204,6 +212,12 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid session")
 
+    return user
+
+def get_admin_user(user: User = Depends(get_current_user)):
+    if not user.is_admin:
+        logger.warning(f"Unauthorized admin access attempt by user: {user.username}")
+        raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
 # -------------------------------------------------
@@ -389,9 +403,16 @@ def logout(request: Request):
     logger.info(f"User ID {user_id} logged out")
     return {"message": "Logged out successfully"}
 
-@app.get("/me", response_model=UserResponse)
-def me(user: User = Depends(get_current_user)):
-    return user
+@app.get("/profile", response_model=ProfileResponse)
+def get_profile(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    logger.info(f"Fetching profile for user: {user.username}")
+    donations = db.query(Donation).filter(Donation.user_id == user.id).all()
+    
+    return {
+        "user": user,
+        "donations": donations,
+        "total_donations": len(donations)
+    }
 
 # -------------------------------------------------
 # DONATION ROUTE
@@ -439,6 +460,41 @@ def my_donations(
     logger.info(f"Fetching donations for user: {user.username}")
     return db.query(Donation).filter(Donation.user_id == user.id).all()
 
+# -------------------------------------------------
+# ADMIN ROUTES
+# -------------------------------------------------
+@app.get("/admin/users", response_model=List[UserResponse])
+def admin_get_users(admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    logger.info(f"Admin {admin.username} is fetching all users")
+    return db.query(User).all()
+
+@app.get("/admin/donations", response_model=List[DonationResponse])
+def admin_get_donations(admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    logger.info(f"Admin {admin.username} is fetching all donations")
+    return db.query(Donation).all()
+
+@app.delete("/admin/donations/{donation_id}", response_model=dict)
+def admin_delete_donation(donation_id: int, admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    logger.info(f"Admin {admin.username} is deleting donation ID: {donation_id}")
+    donation = db.query(Donation).filter(Donation.id == donation_id).first()
+    if not donation:
+        raise HTTPException(status_code=404, detail="Donation not found")
+    
+    db.delete(donation)
+    db.commit()
+    return {"message": f"Donation {donation_id} deleted successfully"}
+
+@app.post("/admin/promote/{user_id}", response_model=dict)
+def admin_promote_user(user_id: int, admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    logger.info(f"Admin {admin.username} is promoting user ID: {user_id}")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_admin = True
+    db.commit()
+    return {"message": f"User {user.username} promoted to admin"}
+
 @app.get("/")
 def root():
-    return {"status": "Meal-Mitra FastAPI backend running", "version": "1.1.0"}
+    return {"status": "Meal-Mitra FastAPI backend (Admin Enabled) running", "version": "1.2.0"}
