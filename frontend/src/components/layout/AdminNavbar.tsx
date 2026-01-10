@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { Menu, User } from "lucide-react";
+import { Menu, User, Utensils } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -31,23 +31,27 @@ const AdminNavbar = ({ toggleSidebar }: AdminNavbarProps) => {
                         <Menu className="h-6 w-6 text-gray-600" />
                     </button>
                 )}
+
                 <Link to="/admin-dashboard" className="flex items-center gap-2">
-                    <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center">
-                        <span className="text-white font-bold text-xl">A</span>
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-orange-500 shadow-lg hover:scale-105 transition">
+                        <Utensils className="w-5 h-5 text-white" />
                     </div>
+
                     <span className="font-bold text-xl tracking-tight hidden md:block">
-                        Meal-Mitra Admin
+                        Meal Mitra Admin
                     </span>
                 </Link>
             </div>
 
+
             <div className="flex items-center gap-4 ml-auto">
-                <Link
-                    to="/admin-profile"
-                    className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
-                >
-                    <User className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">Profile ({username})</span>
+                <Link to="/admin-profile" className="block">
+                    <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition cursor-pointer">
+                        <User className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium text-primary">
+                            Profile ({username})
+                        </span>
+                    </div>
                 </Link>
             </div>
         </nav>

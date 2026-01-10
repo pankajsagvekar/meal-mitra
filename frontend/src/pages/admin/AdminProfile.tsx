@@ -138,7 +138,7 @@ const AdminProfile = () => {
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-600">Account Status</span>
-                                <span className="text-sm font-medium text-green-600 font-bold">Active (Administrator)</span>
+                                <span className="text-sm font-bold text-green-600">Active (Administrator)</span>
                             </div>
                         </div>
                     </div>
