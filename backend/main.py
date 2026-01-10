@@ -553,6 +553,7 @@ def calculate_user_impact(user_id: int, db: Session):
         "kg_saved": total_kg,
         "meals_served": total_meals,
         "co2_reduced": total_co2,
+        "money_saved": total_meals * 40, # Est 40 INR per meal
         "total_donations": len(donations),
         "claimed_count": len(claimed_donations),
         "safe_count": len([d for d in donations if d.food != "unknown"]) # Mock "safe" check
@@ -1524,8 +1525,8 @@ def chat_bot(
     Active Role: {user.role}
     Impact Stats:
     - Meals Served: {impact['meals_served']}
-    - CO2 Saved: {impact['co2_saved_kg']}kg
-    - Money Saved: ₹{impact['money_saved_inr']}
+    - CO2 Saved: {impact['co2_reduced']}kg
+    - Money Saved: ₹{impact.get('money_saved', 0)}
     Recent Activity:
     {donation_history}
     """
