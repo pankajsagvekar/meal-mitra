@@ -55,7 +55,7 @@ const AIChatWidget = () => {
     setIsTyping(true);
 
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+      const baseUrl = "https://meal-mitra.onrender.com";
       const response = await fetch(`${baseUrl}/chat`, {
         method: "POST",
         headers: {
