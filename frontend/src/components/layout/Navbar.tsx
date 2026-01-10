@@ -61,22 +61,20 @@ const Navbar = ({ toggleSidebar, onOpenAuth }: NavbarProps) => {
                     </>
                 ) : (
                     <div className="flex items-center gap-2">
-                        <Link to="/login">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="font-semibold"
-                            >
-                                Sign In
-                            </Button>
-                        </Link>
-                        <Link to="/register">
-                            <Button
-                                size="sm"
-                            >
-                                Get Started
-                            </Button>
-                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="font-semibold"
+                            onClick={() => onOpenAuth?.("login")}
+                        >
+                            Sign In
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={() => onOpenAuth?.("register")}
+                        >
+                            Get Started
+                        </Button>
                     </div>
                 )}
             </div>
