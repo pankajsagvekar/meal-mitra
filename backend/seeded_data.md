@@ -1,3 +1,13 @@
+Test Credentials
+Use these credentials to test the Meal-Mitra application.
+
+👨‍💼 Admin User
+Role: System Administrator
+
+Username: admin_suresh
+Email: admin@mealmitra.com
+Password: Admin@123
+Capabilities: Verify NGOs, Manage Users/Donations
 👤 Test User
 Role: Standard Donor/Consumer
 
