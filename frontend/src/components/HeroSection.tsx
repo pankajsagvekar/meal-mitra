@@ -105,6 +105,24 @@ const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
                                 </Button>
                             </Link>
                         </div>
+
+                        <div className="mt-8 pt-8 border-t border-orange-100/50">
+                            <p className="text-sm font-semibold text-orange-600 mb-4 tracking-wide uppercase">
+                                Are You an Organization?
+                            </p>
+                            <div className="flex flex-wrap items-center justify-center gap-4">
+                                <Link to="/organisation/register">
+                                    <Button className="bg-orange-600 hover:bg-orange-700 text-white shadow-md transition-all hover:scale-105">
+                                        Register as Organization
+                                    </Button>
+                                </Link>
+                                <button onClick={() => onOpenAuth?.("login")}>
+                                    <Button variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50 transition-all hover:scale-105">
+                                        Organization Login
+                                    </Button>
+                                </button>
+                            </div>
+                        </div>
                     </motion.div>
 
                     {/* Stats preview */}

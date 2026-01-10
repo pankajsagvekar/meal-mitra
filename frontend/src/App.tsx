@@ -5,9 +5,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminDeleteDonations from "@/pages/admin/AdminDeleteDonations";
 import AdminDonationDetail from "@/pages/admin/AdminDonationDetail";
 import AdminDonations from "@/pages/admin/AdminDonations";
 import AdminUsers from "@/pages/admin/AdminUsers";
+import VerifyNgo from "@/pages/admin/VerifyNgo";
+import VerifyOrganization from "@/pages/admin/VerifyOrganization";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Home from "@/pages/Home";
 import Impact from "@/pages/Impact";
@@ -19,13 +22,15 @@ import UserDashboard from "@/pages/user/UserDashboard";
 import UserProfile from "@/pages/user/UserProfile";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import OrgLayout from "./components/layout/OrgLayout";
 import AdminProfile from "./pages/admin/AdminProfile";
-import VerifyNgo from "./pages/admin/VerifyNgo";
 import NgoDashboard from "./pages/ngo/NgoDashboard";
 import NgoLogin from "./pages/ngo/NgoLogin";
 import NgoProfile from "./pages/ngo/NgoProfile";
 import NgoRegister from "./pages/ngo/NgoRegister";
 import NotFound from "./pages/NotFound";
+import OrgDashboard from "./pages/organisation/OrgDashboard";
+import OrgRegister from "./pages/organisation/OrgRegister";
 import HelpSupport from "./pages/other/HelpSupport";
 import ClaimFood from "./pages/user/ClaimFood";
 
@@ -47,6 +52,7 @@ const App = () => (
           {/* NGO Auth Routes */}
           <Route path="/ngo/login" element={<NgoLogin />} />
           <Route path="/ngo/register" element={<NgoRegister />} />
+          <Route path="/organisation/register" element={<OrgRegister />} />
 
           {/* Protected/Main Layout Routes */}
           <Route element={<MainLayout />}>
@@ -69,12 +75,19 @@ const App = () => (
             <Route path="/admin/donations/:donationId" element={<AdminDonationDetail />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/verify-ngo" element={<VerifyNgo />} />
+            <Route path="/admin/verify-org" element={<VerifyOrganization />} />
+            <Route path="/admin/delete-donations" element={<AdminDeleteDonations />} />
           </Route>
 
           {/* NGO Routes */}
           <Route element={<NgoLayout />}>
             <Route path="/ngo/dashboard" element={<NgoDashboard />} />
             <Route path="/ngo/profile" element={<NgoProfile />} />
+          </Route>
+
+          {/* Org Routes */}
+          <Route element={<OrgLayout />}>
+            <Route path="/organisation/dashboard" element={<OrgDashboard />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -3,63 +3,63 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import api from "@/lib/api";
-import { CheckCircle, FileText, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-interface NGO {
+interface Organization {
     id: number;
-    name: string;
+    username: string;
     email: string;
-    ngo_type: string;
-    registration_status: string;
-    id_proof: string;
-    address_proof: string;
+    role: string;
+    verification_status: string;
+    fssai_license: string;
+    document_proof?: string;
 }
 
-const VerifyNgo = () => {
-    const [ngos, setNgos] = useState<NGO[]>([]);
+const VerifyOrganization = () => {
+    const [orgs, setOrgs] = useState<Organization[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchNgos = async () => {
+    const fetchOrgs = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get("/admin/ngos");
-            setNgos(res.data);
+            const res = await api.get("/admin/organizations");
+            setOrgs(res.data);
         } catch (error) {
-            console.error("Failed to fetch NGOs:", error);
-            toast.error("Failed to load NGOs");
+            console.error("Failed to fetch organizations:", error);
+            toast.error("Failed to load organizations");
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchNgos();
+        fetchOrgs();
     }, []);
 
-    const verifyNgo = async (ngoId: number, action: 'approve' | 'reject') => {
-        const confirmMsg = action === 'approve' ? "Are you sure you want to approve this NGO?" : "Are you sure you want to reject this NGO?";
+    const verifyOrg = async (userId: number, action: 'approve' | 'reject') => {
+        const confirmMsg = action === 'approve' ? "Are you sure you want to approve this organization?" : "Are you sure you want to reject this organization?";
         if (!confirm(confirmMsg)) return;
 
         try {
-            await api.post(`/admin/ngos/${ngoId}/verify`, null, {
+            await api.post(`/admin/organizations/${userId}/verify`, null, {
                 params: { action }
             });
-            toast.success(`NGO ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
-            fetchNgos();
+            toast.success(`Organization ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+            fetchOrgs();
         } catch (error) {
             console.error("Verification failed:", error);
-            toast.error(`Failed to ${action} NGO`);
+            toast.error(`Failed to ${action} organization`);
         }
     };
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900">NGO Verification</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Organization Verification</h1>
             <Card>
                 <CardHeader>
-                    <CardTitle>Registered NGOs</CardTitle>
+                    <CardTitle>Registered Organizations</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {isLoading ? (
@@ -70,44 +70,31 @@ const VerifyNgo = () => {
                                 <TableRow>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Type</TableHead>
+                                    <TableHead>FSSAI License</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Proofs</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {ngos.map((ngo) => (
-                                    <TableRow key={ngo.id}>
-                                        <TableCell className="font-medium">{ngo.name}</TableCell>
-                                        <TableCell>{ngo.ngo_type}</TableCell>
+                                {orgs.map((org) => (
+                                    <TableRow key={org.id}>
+                                        <TableCell className="font-medium">{org.username}</TableCell>
+                                        <TableCell>{org.role}</TableCell>
+                                        <TableCell>{org.fssai_license}</TableCell>
                                         <TableCell>
                                             <Badge variant={
-                                                ngo.registration_status === "Approved" ? "default" :
-                                                    ngo.registration_status === "Rejected" ? "destructive" : "outline"
+                                                org.verification_status === "Approved" ? "default" :
+                                                    org.verification_status === "Rejected" ? "destructive" : "outline"
                                             }>
-                                                {ngo.registration_status}
+                                                {org.verification_status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex gap-2">
-                                                {ngo.id_proof && (
-                                                    <a href={ngo.id_proof} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
-                                                        <FileText className="w-4 h-4" /> ID
-                                                    </a>
-                                                )}
-                                                {ngo.address_proof && (
-                                                    <a href={ngo.address_proof} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
-                                                        <FileText className="w-4 h-4" /> Address
-                                                    </a>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {ngo.registration_status === "Applied" && (
+                                            {org.verification_status === "Applied" && (
                                                 <div className="flex gap-2">
                                                     <Button
                                                         size="sm"
-                                                        onClick={() => verifyNgo(ngo.id, 'approve')}
+                                                        onClick={() => verifyOrg(org.id, 'approve')}
                                                         className="bg-green-600 hover:bg-green-700 h-8 px-2"
                                                     >
                                                         <CheckCircle className="w-4 h-4 mr-1" />
@@ -116,7 +103,7 @@ const VerifyNgo = () => {
                                                     <Button
                                                         size="sm"
                                                         variant="destructive"
-                                                        onClick={() => verifyNgo(ngo.id, 'reject')}
+                                                        onClick={() => verifyOrg(org.id, 'reject')}
                                                         className="h-8 px-2"
                                                     >
                                                         <XCircle className="w-4 h-4 mr-1" />
@@ -136,4 +123,4 @@ const VerifyNgo = () => {
     );
 };
 
-export default VerifyNgo;
+export default VerifyOrganization;

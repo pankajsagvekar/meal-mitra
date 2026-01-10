@@ -1,15 +1,15 @@
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { Building2, Heart, LayoutDashboard, LogOut, ShieldCheck, Trash2, Users } from "lucide-react";
+import { Heart, HeartHandshake, LayoutDashboard, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-interface AdminSidebarProps {
+interface OrgSidebarProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
+const OrgSidebar = ({ isOpen, onClose }: OrgSidebarProps) => {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -24,12 +24,9 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
     };
 
     const links = [
-        { href: "/admin-dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/admin/donations", label: "All Donations", icon: Heart },
-        { href: "/admin/delete-donations", label: "Manage Donations", icon: Trash2 },
-        { href: "/admin/users", label: "Users", icon: Users },
-        { href: "/admin/verify-ngo", label: "Verify NGOs", icon: ShieldCheck },
-        { href: "/admin/verify-org", label: "Verify Orgs", icon: Building2 },
+        { href: "/organisation/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/donate", label: "Donate", icon: HeartHandshake },
+        { href: "/my-donations", label: "My Donation", icon: Heart },
     ];
 
     return (
@@ -37,7 +34,7 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
             {/* Overlay */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/50 z-[55] lg:hidden"
                     onClick={onClose}
                 />
             )}
@@ -63,7 +60,7 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
                                         className={cn(
                                             "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                                             isActive
-                                                ? "bg-primary/10 text-primary"
+                                                ? "bg-orange-50 text-orange-600"
                                                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                         )}
                                     >
@@ -90,4 +87,4 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
     );
 };
 
-export default AdminSidebar;
+export default OrgSidebar;
