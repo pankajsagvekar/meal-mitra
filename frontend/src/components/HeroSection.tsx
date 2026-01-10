@@ -13,22 +13,22 @@ const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
             {/* Floating decorative elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
-                    className="absolute top-20 left-10 w-20 h-20 rounded-full bg-primary/10"
+                    className="absolute top-20 left-10 w-20 h-20 rounded-full bg-primary/40"
                     animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
-                    className="absolute top-40 right-20 w-16 h-16 rounded-full bg-secondary/10"
+                    className="absolute top-40 right-20 w-16 h-16 rounded-full bg-secondary/40"
                     animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
                 />
                 <motion.div
-                    className="absolute bottom-40 left-1/4 w-12 h-12 rounded-full bg-accent/10"
+                    className="absolute bottom-40 left-1/4 w-12 h-12 rounded-full bg-accent/40"
                     animate={{ y: [0, -15, 0] }}
                     transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                 />
                 <motion.div
-                    className="absolute bottom-20 right-1/3 w-24 h-24 rounded-full bg-primary/5"
+                    className="absolute bottom-20 right-1/3 w-24 h-24 rounded-full bg-primary/20"
                     animate={{ y: [0, 20, 0], scale: [1, 1.05, 1] }}
                     transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                 />
@@ -58,7 +58,7 @@ const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
                         transition={{ duration: 0.6, delay: 0.3 }}
                         className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-4"
                     >
-                        Meal<span className="text-primary">Mitra</span>
+                        Meal<span className="text-primary"> Mitra</span>
                     </motion.h1>
 
                     {/* Tagline */}
@@ -68,7 +68,7 @@ const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="text-xl md:text-2xl text-muted-foreground font-medium mb-8"
                     >
-                        Turning surplus food into shared meals
+                        No One Sleeps Hungry...
                     </motion.p>
 
                     {/* Description */}
@@ -89,7 +89,7 @@ const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
                         transition={{ duration: 0.6, delay: 0.6 }}
                         className="flex flex-col sm:flex-row items-center justify-center gap-4"
                     >
-                        
+
                     </motion.div>
 
                     {/* Stats preview */}
