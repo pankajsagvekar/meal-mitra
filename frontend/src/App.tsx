@@ -40,7 +40,6 @@ const App = () => (
         <Routes>
           {/* Public Routes with No Sidebar */}
           <Route path="/" element={<Home />} />
-          <Route path="/help-support" element={<HelpSupport />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -57,6 +56,7 @@ const App = () => (
             <Route path="/impact" element={<Impact />} />
             <Route path="/my-donations" element={<MyDonation />} />
             <Route path="/claim-food" element={<ClaimFood />} />
+            <Route path="/help-support" element={<HelpSupport />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
