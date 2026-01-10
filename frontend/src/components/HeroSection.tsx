@@ -58,7 +58,7 @@ const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
                         transition={{ duration: 0.6, delay: 0.3 }}
                         className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-4"
                     >
-                        Meal-<span className="text-primary">Mitra</span>
+                        Meal<span className="text-primary">Mitra</span>
                     </motion.h1>
 
                     {/* Tagline */}
@@ -83,7 +83,15 @@ const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
                     </motion.p>
 
                     {/* CTA Buttons */}
-                    
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.6 }}
+                        className="flex flex-col sm:flex-row items-center justify-center gap-4"
+                    >
+                        
+                    </motion.div>
+
                     {/* Stats preview */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

@@ -1,13 +1,10 @@
 
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import api from "@/lib/api";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import LoginForm from "./LoginForm";
+import RegisterForm from "./RegisterForm";
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -17,58 +14,10 @@ interface AuthModalProps {
 
 const AuthModal = ({ isOpen, onClose, defaultTab = "login" }: AuthModalProps) => {
     const [activeTab, setActiveTab] = useState<"login" | "register">(defaultTab);
-    const [isLoading, setIsLoading] = useState(false);
+
     const navigate = useNavigate();
 
-    // Login State
-    const [loginUsername, setLoginUsername] = useState("");
-    const [loginPassword, setLoginPassword] = useState("");
 
-    // Register State
-    const [registerUsername, setRegisterUsername] = useState("");
-    const [registerPassword, setRegisterPassword] = useState("");
-
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        try {
-            const formData = new URLSearchParams();
-            formData.append("username", loginUsername);
-            formData.append("password", loginPassword);
-
-            await api.post("/login", formData);
-            toast.success("Login successful!");
-            onClose();
-            navigate("/user/dashboard");
-        } catch (error) {
-            console.error("Login error:", error);
-            toast.error("Invalid credentials");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        try {
-            const formData = new URLSearchParams();
-            formData.append("username", registerUsername);
-            formData.append("password", registerPassword);
-
-            await api.post("/register", formData);
-            toast.success("Registration successful! Please login.");
-            setActiveTab("login");
-            setLoginUsername(registerUsername);
-            setRegisterUsername("");
-            setRegisterPassword("");
-        } catch (error) {
-            console.error("Registration error:", error);
-            toast.error("Registration failed. Username might be taken.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     // Update internal state when prop changes (if needed, though Dialog controls mount usually)
     // Here we rely on the Tabs value prop if we want it controlled, or defaultValue. 
@@ -100,67 +49,14 @@ const AuthModal = ({ isOpen, onClose, defaultTab = "login" }: AuthModalProps) =>
                     </TabsList>
 
                     <TabsContent value="login">
-                        <form onSubmit={handleLogin} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="login-username">Username</Label>
-                                <Input
-                                    id="login-username"
-                                    type="text"
-                                    placeholder="Enter your username"
-                                    value={loginUsername}
-                                    onChange={(e) => setLoginUsername(e.target.value)}
-                                    required
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="login-password">Password</Label>
-                                <Input
-                                    id="login-password"
-                                    type="password"
-                                    placeholder="Enter your password"
-                                    value={loginPassword}
-                                    onChange={(e) => setLoginPassword(e.target.value)}
-                                    required
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <Button type="submit" className="w-full bg-primary font-bold" disabled={isLoading}>
-                                {isLoading ? "Signing in..." : "Sign In"}
-                            </Button>
-                        </form>
+                        <LoginForm onSuccess={() => {
+                            onClose();
+                            navigate("/user/dashboard");
+                        }} />
                     </TabsContent>
 
                     <TabsContent value="register">
-                        <form onSubmit={handleRegister} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="register-username">Username</Label>
-                                <Input
-                                    id="register-username"
-                                    type="text"
-                                    placeholder="Choose a username"
-                                    value={registerUsername}
-                                    onChange={(e) => setRegisterUsername(e.target.value)}
-                                    required
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="register-password">Password</Label>
-                                <Input
-                                    id="register-password"
-                                    type="password"
-                                    placeholder="Choose a password"
-                                    value={registerPassword}
-                                    onChange={(e) => setRegisterPassword(e.target.value)}
-                                    required
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <Button type="submit" className="w-full bg-primary font-bold" disabled={isLoading}>
-                                {isLoading ? "Creating account..." : "Sign Up"}
-                            </Button>
-                        </form>
+                        <RegisterForm onSuccess={() => setActiveTab("login")} />
                     </TabsContent>
                 </Tabs>
             </DialogContent>
