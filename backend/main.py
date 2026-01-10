@@ -82,7 +82,13 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "https://meal-mitra.vercel.app",
 ]
+
+# Add allowed origins from environment variable
+env_origins = os.getenv("ALLOWED_ORIGINS")
+if env_origins:
+    origins.extend([origin.strip() for origin in env_origins.split(",")])
 
 app.add_middleware(
     CORSMiddleware,
@@ -225,11 +231,17 @@ class ChatRequest(BaseModel):
 # -------------------------------------------------
 # DATABASE SETUP (DB IN PROJECT FOLDER)
 # -------------------------------------------------
-DATABASE_URL = "sqlite:///./app.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+# Render provides 'postgres://' but SQLAlchemy needs 'postgresql://'
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# connect_args is only needed for SQLite
+connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args=connect_args
 )
 
 SessionLocal = sessionmaker(bind=engine)
