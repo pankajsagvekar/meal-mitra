@@ -26,6 +26,7 @@ import NgoLogin from "./pages/ngo/NgoLogin";
 import NgoProfile from "./pages/ngo/NgoProfile";
 import NgoRegister from "./pages/ngo/NgoRegister";
 import NotFound from "./pages/NotFound";
+import HelpSupport from "./pages/other/HelpSupport";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +39,7 @@ const App = () => (
         <Routes>
           {/* Public Routes with No Sidebar */}
           <Route path="/" element={<Home />} />
-          
+          <Route path="/help-support" element={<HelpSupport />} />          
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

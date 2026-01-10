@@ -29,7 +29,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     ];
 
     const bottomItems = [
-        { icon: HelpCircle, label: "Help & Support", path: "/support" },
+        { icon: HelpCircle, label: "Help & Support", path: "/help-support" },
     ];
 
     return (
