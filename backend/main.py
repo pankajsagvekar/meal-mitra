@@ -70,11 +70,14 @@ conf = ConnectionConfig(
 
 serializer = URLSafeTimedSerializer(SECRET_KEY)
 
+# Production requires SameSite="None" and Secure=True for cross-site cookies
+is_production = os.getenv("fastapi_env") == "production"
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=SECRET_KEY,
-    same_site="lax",
-    https_only=False
+    same_site="none" if is_production else "lax",
+    https_only=is_production  # True in prod (Render), False in dev (localhost)
 )
 
 origins = [
