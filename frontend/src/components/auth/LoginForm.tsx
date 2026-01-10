@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface LoginFormProps {
@@ -20,7 +20,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const formData = new FormData();
+            const formData = new URLSearchParams();
             formData.append("username", username);
             formData.append("password", password);
 
@@ -65,7 +65,15 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
                 />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Link
+                        to="/forgot-password"
+                        className="text-sm font-medium text-primary hover:underline"
+                    >
+                        Forgot Password?
+                    </Link>
+                </div>
                 <Input
                     id="login-password"
                     type="password"
