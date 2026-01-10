@@ -215,9 +215,12 @@ class NGOUpdate(BaseModel):
 class NGOResponse(NGOBase):
     id: int
     registration_status: str
-    certificate_id: Optional[str] = None
+    
     class Config:
         from_attributes = True
+
+class ChatRequest(BaseModel):
+    message: str
 
 # -------------------------------------------------
 # DATABASE SETUP (DB IN PROJECT FOLDER)
@@ -550,6 +553,7 @@ def calculate_user_impact(user_id: int, db: Session):
         "kg_saved": total_kg,
         "meals_served": total_meals,
         "co2_reduced": total_co2,
+        "money_saved": total_meals * 40, # Est 40 INR per meal
         "total_donations": len(donations),
         "claimed_count": len(claimed_donations),
         "safe_count": len([d for d in donations if d.food != "unknown"]) # Mock "safe" check
@@ -1402,6 +1406,74 @@ async def admin_verify_ngo(
     
     return {"message": f"NGO {ngo.name} status updated to {ngo.registration_status}"}
 
+@app.get("/dashboard/user", tags=["Profile"])
+def get_user_dashboard(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Aggregation of user statistics for their dashboard."""
+    logger.info(f"Fetching dashboard for user: {user.username}")
+    
+    # 1. Basic Counts
+    total_donated = db.query(Donation).filter(Donation.user_id == user.id).count()
+    total_claimed = db.query(Donation).filter(
+        (Donation.claimed_by_user_id == user.id) | 
+        (Donation.status == "Claimed") # Simplified logic, ideally check claimer ID
+    ).count()
+    if user.role != "Individual":
+         # Orgs might behave like NGOs for claiming? Or just track donations.
+         pass
+         
+    active_donations = db.query(Donation).filter(Donation.user_id == user.id, Donation.status == "Available").count()
+
+    # 2. Impact Metrics
+    impact = calculate_user_impact(user.id, db)
+
+    # 3. Recent Activity (Last 5)
+    recent = db.query(Donation).filter(Donation.user_id == user.id).order_by(Donation.id.desc()).limit(5).all()
+    
+    return {
+        "stats": {
+            "total_donated": total_donated,
+            "total_claimed_by_others": db.query(Donation).filter(Donation.user_id == user.id, Donation.status == "Completed").count(),
+            "active_listings": active_donations
+        },
+        "impact": impact,
+        "recent_activity": recent
+    }
+
+@app.get("/dashboard/admin", tags=["Admin"])
+def get_admin_dashboard(admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """System-wide statistics for the Admin Dashboard."""
+    logger.info(f"Fetching admin dashboard for: {admin.username}")
+    
+    # 1. User Stats
+    total_users = db.query(User).count()
+    total_ngos = db.query(NGO).count()
+    
+    # 2. Pending Verifications
+    pending_orgs = db.query(User).filter(User.verification_status == "Applied").count()
+    pending_ngos = db.query(NGO).filter(NGO.registration_status == "Applied").count()
+    
+    # 3. Donation Health
+    stats = {
+        "total": db.query(Donation).count(),
+        "available": db.query(Donation).filter(Donation.status == "Available").count(),
+        "claimed": db.query(Donation).filter(Donation.status == "Claimed").count(),
+        "completed": db.query(Donation).filter(Donation.status == "Completed").count(),
+        "expired": db.query(Donation).filter(Donation.status == "Expired").count()
+    }
+    
+    return {
+        "user_stats": {
+            "total_users": total_users,
+            "total_ngos": total_ngos
+        },
+        "pending_actions": {
+            "organizations": pending_orgs,
+            "ngos": pending_ngos
+        },
+        "donation_stats": stats,
+        "system_health": "Good" # Placeholder
+    }
+
 @app.get("/admin/organizations", response_model=List[UserResponse], tags=["Admin"])
 def admin_get_organizations(admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     logger.info(f"Admin {admin.username} fetching organizations")
@@ -1434,6 +1506,68 @@ async def admin_verify_organization(
     background_tasks.add_task(send_org_status_email, org_user.email, org_user.username, org_user.verification_status)
     
     return {"message": f"Organization {org_user.username} status updated to {org_user.verification_status}"}
+
+@app.post("/chat", response_model=dict, tags=["General"])
+def chat_bot(
+    request: ChatRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Context-aware chatbot for health, nutrition, and platform queries."""
+    
+    # 1. Gather Context
+    impact = calculate_user_impact(user.id, db)
+    recent_donations = db.query(Donation).filter(Donation.user_id == user.id).order_by(Donation.id.desc()).limit(3).all()
+    donation_history = "\n".join([f"- {d.food} ({d.quantity}) on {d.created_at}" for d in recent_donations])
+    
+    context = f"""
+    User: {user.username}
+    Active Role: {user.role}
+    Impact Stats:
+    - Meals Served: {impact['meals_served']}
+    - CO2 Saved: {impact['co2_reduced']}kg
+    - Money Saved: ₹{impact.get('money_saved', 0)}
+    Recent Activity:
+    {donation_history}
+    """
+    
+    # 2. Construct System Prompt
+    system_prompt = f"""
+    You are 'Meal-Mitra Bot', an AI assistant for the Meal-Mitra food donation platform.
+    
+    YOUR MISSION:
+    - Help users reduce food waste.
+    - Provide advice on food safety, nutrition, and health.
+    - Explain platform features (donating, claiming, badges).
+    - Use the provided USER CONTEXT to personalize answers.
+    
+    USER CONTEXT:
+    {context}
+    
+    GUARDRAILS:
+    - ONLY answer questions related to Food, Health, Nutrition, and Meal-Mitra.
+    - IF asked about completely unrelated topics (entertainment, coding, politics), politely refuse: "I am only tuned to help with food, health, and Meal-Mitra."
+    - IF asked about food safety for specific items in their history, use the context.
+    - Be friendly, encouraging, and concise.
+    """
+    
+    # 3. Call Groq API
+    try:
+        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": request.message}
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.7,
+            max_tokens=300,
+        )
+        response_text = chat_completion.choices[0].message.content
+        return {"response": response_text}
+    except Exception as e:
+        logger.error(f"Chatbot error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process chat request")
 
 @app.get("/", tags=["General"])
 def root():
