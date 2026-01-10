@@ -10,13 +10,7 @@ interface Message {
   content: string;
 }
 
-const FOOD_KEYWORDS = [
-  "food", "meal", "store", "storage", "refrigerate", "freeze", "preserve",
-  "safe", "safety", "spoil", "expire", "expiry", "container", "package",
-  "pack", "temperature", "hygiene", "clean", "bacteria", "fresh", "leftover",
-  "donate", "donation", "eat", "cook", "cooked", "raw", "vegetable", "fruit",
-  "rice", "bread", "roti", "dal", "curry", "meat", "fish", "dairy", "milk"
-];
+
 
 const QUICK_REPLIES = [
   "How long can I store cooked rice?",
@@ -45,39 +39,7 @@ const AIChatWidget = () => {
     scrollToBottom();
   }, [messages]);
 
-  const isRelatedToFood = (text: string) => {
-    const lowerText = text.toLowerCase();
-    return FOOD_KEYWORDS.some((keyword) => lowerText.includes(keyword));
-  };
 
-  const generateResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase();
-
-    if (!isRelatedToFood(userMessage)) {
-      return "I'm here to help with food safety, storage, and packaging questions only. Please ask something related to food donations! 🙏";
-    }
-
-    if (lowerMessage.includes("rice")) {
-      return "Cooked rice can be safely stored for 4-6 hours at room temperature, or up to 3-4 days if refrigerated within 1 hour of cooking. For donations, pack in airtight containers and mention the cooking time.";
-    }
-    if (lowerMessage.includes("roti") || lowerMessage.includes("bread")) {
-      return "Rotis stay fresh for 6-8 hours at room temperature. Wrap them in aluminum foil or a clean cloth to keep them soft. For donations, stack them and wrap tightly!";
-    }
-    if (lowerMessage.includes("pack") || lowerMessage.includes("container")) {
-      return "Use clean, airtight containers. Label with food type and preparation time. Separate dry and wet items. For hot foods, let them cool before sealing.";
-    }
-    if (lowerMessage.includes("yesterday") || lowerMessage.includes("day old")) {
-      return "Day-old food can be donated if properly refrigerated. Check for any off smells or texture changes. Always mention the preparation date to the NGO.";
-    }
-    if (lowerMessage.includes("safe") || lowerMessage.includes("safety")) {
-      return "Key safety tips: Keep hot foods hot (above 60°C) and cold foods cold (below 5°C). Donate within 4 hours of cooking. Avoid cross-contamination between raw and cooked items.";
-    }
-    if (lowerMessage.includes("store") || lowerMessage.includes("storage")) {
-      return "Store food in clean containers at safe temperatures. Refrigerate perishables immediately. Keep raw and cooked foods separate. Label everything with dates!";
-    }
-
-    return "Great question about food! For specific guidance, consider the type of food, how long ago it was prepared, and storage conditions. Fresh, properly stored food is best for donations.";
-  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -92,19 +54,48 @@ const AIChatWidget = () => {
     setInput("");
     setIsTyping(true);
 
-    // Simulate typing delay
-    await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
+    try {
+      const response = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Important for session cookie
+        body: JSON.stringify({ message: userMessage.content }),
+      });
 
-    const response = generateResponse(userMessage.content);
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: response,
-    };
+      const data = await response.json();
 
-    setIsTyping(false);
-    setMessages((prev) => [...prev, assistantMessage]);
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.response || "Sorry, I'm having trouble connecting right now.",
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Chat Error:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "I'm currently unable to reach the server. Please try again later.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   };
+
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+
+  useEffect(() => {
+    // Check for post-login prompt
+    const shouldPrompt = localStorage.getItem("showChatPrompt");
+    if (shouldPrompt === "true") {
+      setShowWelcomePopup(true);
+      localStorage.removeItem("showChatPrompt");
+    }
+  }, []);
 
   const handleQuickReply = (reply: string) => {
     setInput(reply);
@@ -112,22 +103,66 @@ const AIChatWidget = () => {
 
   return (
     <>
+      {/* Welcome Popup */}
+      <AnimatePresence>
+        {showWelcomePopup && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed bottom-24 right-6 z-50 w-[300px] bg-card rounded-xl shadow-2xl border border-border p-4"
+          >
+            <div className="flex gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-6 h-6 text-orange-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm">Need help?</h4>
+                <p className="text-xs text-muted-foreground">
+                  I can help you with food safety or managing donations.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowWelcomePopup(false)}
+              >
+                No, thanks
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                onClick={() => {
+                  setIsOpen(true);
+                  setShowWelcomePopup(false);
+                }}
+              >
+                Chat now
+              </Button>
+            </div>
+            {/* Arrow pointing down */}
+            <div className="absolute -bottom-2 right-8 w-4 h-4 bg-card border-b border-r border-border rotate-45" />
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Chat Bubble */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
+            exit={{ scale: 60, opacity: 0 }}
             className="fixed bottom-6 right-6 z-50"
           >
             <Button
               onClick={() => setIsOpen(true)}
               size="icon-lg"
-              variant="hero"
-              className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl"
+              className="w-14 h-14 rounded-full shadow-2xl hover:shadow-xl bg-orange-600 hover:bg-orange-700 text-white border-2 border-white"
             >
-              <MessageCircle className="w-6 h-6" />
+              <MessageCircle className="w-8 h-8" />
             </Button>
             {/* Notification dot */}
             <span className="absolute top-0 right-0 w-3 h-3 bg-secondary rounded-full animate-pulse" />
@@ -141,7 +176,7 @@ const AIChatWidget = () => {
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            exit={{ opacity: 60, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-48px)] bg-card rounded-2xl shadow-2xl border border-border overflow-hidden"
           >
@@ -164,7 +199,7 @@ const AIChatWidget = () => {
                 size="icon"
                 variant="ghost"
                 onClick={() => setIsOpen(false)}
-                className="text-primary-foreground hover:bg-primary-foreground/10"
+                className="text-black hover:bg-black/10"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -177,9 +212,8 @@ const AIChatWidget = () => {
                   key={message.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`flex gap-2 ${
-                    message.role === "user" ? "justify-end" : "justify-start"
-                  }`}
+                  className={`flex gap-2 ${message.role === "user" ? "justify-end" : "justify-start"
+                    }`}
                 >
                   {message.role === "assistant" && (
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -187,11 +221,10 @@ const AIChatWidget = () => {
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] p-3 rounded-2xl text-sm ${
-                      message.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-muted text-foreground rounded-bl-md"
-                    }`}
+                    className={`max-w-[80%] p-3 rounded-2xl text-sm ${message.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-muted text-foreground rounded-bl-md"
+                      }`}
                   >
                     {message.content}
                   </div>

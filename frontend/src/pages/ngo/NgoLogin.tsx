@@ -21,6 +21,10 @@ const NgoLogin = () => {
         try {
             const res = await api.post("/ngo/login", formData);
             toast.success(res.data.message);
+
+            // Signal to AIChatWidget to show prompt
+            localStorage.setItem("showChatPrompt", "true");
+
             navigate("/ngo/dashboard");
         } catch (error: any) {
             console.error("NGO Login failed:", error);

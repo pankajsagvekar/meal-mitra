@@ -1509,28 +1509,54 @@ async def admin_verify_organization(
 
 @app.post("/chat", response_model=dict, tags=["General"])
 def chat_bot(
-    request: ChatRequest,
-    user: User = Depends(get_current_user),
+    request_body: ChatRequest,
+    request: Request,
     db: Session = Depends(get_db)
 ):
-    """Context-aware chatbot for health, nutrition, and platform queries."""
+    """Context-aware chatbot for health, nutrition, and platform queries. Accessible to All."""
     
     # 1. Gather Context
-    impact = calculate_user_impact(user.id, db)
-    recent_donations = db.query(Donation).filter(Donation.user_id == user.id).order_by(Donation.id.desc()).limit(3).all()
-    donation_history = "\n".join([f"- {d.food} ({d.quantity}) on {d.created_at}" for d in recent_donations])
+    user_id = request.session.get("user_id")
+    ngo_id = request.session.get("ngo_id")
     
-    context = f"""
-    User: {user.username}
-    Active Role: {user.role}
-    Impact Stats:
-    - Meals Served: {impact['meals_served']}
-    - CO2 Saved: {impact['co2_reduced']}kg
-    - Money Saved: ₹{impact.get('money_saved', 0)}
-    Recent Activity:
-    {donation_history}
-    """
-    
+    context = ""
+    user_role = "Guest"
+    user_name = "Guest"
+
+    if user_id:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            user_role = user.role
+            user_name = user.username
+            impact = calculate_user_impact(user.id, db)
+            recent_donations = db.query(Donation).filter(Donation.user_id == user.id).order_by(Donation.id.desc()).limit(3).all()
+            donation_history = "\n".join([f"- {d.food} ({d.quantity}) on {d.created_at}" for d in recent_donations]) if recent_donations else "No recent donations."
+            
+            context = f"""
+            User: {user.username}
+            Active Role: {user.role}
+            Impact Stats:
+            - Meals Served: {impact['meals_served']}
+            - CO2 Saved: {impact['co2_reduced']}kg
+            - Money Saved: ₹{impact.get('money_saved', 0)}
+            Recent Activity:
+            {donation_history}
+            """
+            
+    elif ngo_id:
+        ngo = db.query(NGO).filter(NGO.id == ngo_id).first()
+        if ngo:
+            user_role = "NGO"
+            user_name = ngo.name
+            context = f"""
+            User: {ngo.name}
+            Active Role: NGO ({ngo.ngo_type})
+            Status: {ngo.registration_status}
+            """
+
+    if not context:
+        context = "User is a guest visitor. Encourage them to join Meal-Mitra to donate or claim food."
+
     # 2. Construct System Prompt
     system_prompt = f"""
     You are 'Meal-Mitra Bot', an AI assistant for the Meal-Mitra food donation platform.
@@ -1547,7 +1573,6 @@ def chat_bot(
     GUARDRAILS:
     - ONLY answer questions related to Food, Health, Nutrition, and Meal-Mitra.
     - IF asked about completely unrelated topics (entertainment, coding, politics), politely refuse: "I am only tuned to help with food, health, and Meal-Mitra."
-    - IF asked about food safety for specific items in their history, use the context.
     - Be friendly, encouraging, and concise.
     """
     
@@ -1557,7 +1582,7 @@ def chat_bot(
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": request.message}
+                {"role": "user", "content": request_body.message}
             ],
             model="llama-3.3-70b-versatile",
             temperature=0.7,
@@ -1567,7 +1592,8 @@ def chat_bot(
         return {"response": response_text}
     except Exception as e:
         logger.error(f"Chatbot error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process chat request")
+        # Soft fallback if AI fails
+        return {"response": "I'm currently having trouble connecting to my brain. Please try again later! 🤖"}
 
 @app.get("/", tags=["General"])
 def root():

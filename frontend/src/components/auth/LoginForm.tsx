@@ -38,6 +38,9 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
                 navigate("/user/dashboard");
             }
 
+            // Signal to AIChatWidget to show prompt
+            localStorage.setItem("showChatPrompt", "true");
+
             if (onSuccess) {
                 onSuccess();
             }
