@@ -18,6 +18,7 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+
         try {
             const formData = new FormData();
             formData.append("username", username);
@@ -25,16 +26,32 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
             formData.append("password", password);
 
             await api.post("/register", formData);
+
             toast.success("Registration successful! Please login.");
+
             setUsername("");
             setEmail("");
             setPassword("");
-            if (onSuccess) {
-                onSuccess();
-            }
-        } catch (error) {
+
+            onSuccess?.();
+        } catch (error: any) {
             console.error("Registration error:", error);
-            toast.error("Registration failed. Username might be taken.");
+
+            let message = "Registration failed";
+
+            if (error.response?.data) {
+                const data = error.response.data;
+
+                if (Array.isArray(data.detail)) {
+                    message = data.detail.map((err: any) => err.msg).join(", ");
+                } else if (typeof data.detail === "string") {
+                    message = data.detail;
+                } else if (typeof data.message === "string") {
+                    message = data.message;
+                }
+            }
+
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }
@@ -46,39 +63,38 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
                 <Label htmlFor="register-username">Username</Label>
                 <Input
                     id="register-username"
-                    type="text"
-                    placeholder="Choose a username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    required
                     disabled={isLoading}
+                    required
                 />
             </div>
+
             <div className="space-y-2">
                 <Label htmlFor="register-email">Email</Label>
                 <Input
                     id="register-email"
                     type="email"
-                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
                     disabled={isLoading}
+                    required
                 />
             </div>
+
             <div className="space-y-2">
                 <Label htmlFor="register-password">Password</Label>
                 <Input
                     id="register-password"
                     type="password"
-                    placeholder="Choose a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
                     disabled={isLoading}
+                    required
                 />
             </div>
-            <Button type="submit" className="w-full bg-primary font-bold" disabled={isLoading}>
+
+            <Button disabled={isLoading} className="w-full">
                 {isLoading ? "Creating account..." : "Sign Up"}
             </Button>
         </form>
