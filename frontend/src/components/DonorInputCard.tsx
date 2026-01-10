@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, MapPin, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatePresence, motion } from "framer-motion";
+import { Loader2, MapPin, Mic, MicOff, Send } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface DonorInputCardProps {
   onSubmit: (data: { text: string; location: { lat: number; lng: number } | null }) => void;
@@ -73,10 +73,10 @@ const DonorInputCard = ({ onSubmit, isLoading }: DonorInputCardProps) => {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    
+
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = "hi-IN"; // Changed to Hindi (India) for better local language support
 
     if (!isListening) {
       setIsListening(true);
@@ -153,7 +153,7 @@ const DonorInputCard = ({ onSubmit, isLoading }: DonorInputCardProps) => {
               <span className="absolute bottom-3 left-3 text-xs text-muted-foreground">
                 💡 Type in any language
               </span>
-              
+
               {/* Voice Input Button */}
               <motion.div
                 className="absolute top-3 right-3"
@@ -223,11 +223,11 @@ const DonorInputCard = ({ onSubmit, isLoading }: DonorInputCardProps) => {
               size="lg"
               onClick={handleSubmit}
               disabled={isLoading || !text.trim()}
-              className="w-full"
+              className="w-full bg-orange-400 hover:bg-orange-500"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin " />
                   Processing...
                 </>
               ) : (

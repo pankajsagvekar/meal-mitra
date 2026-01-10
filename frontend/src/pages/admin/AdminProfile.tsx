@@ -87,9 +87,7 @@ const AdminProfile = () => {
                                     Admin
                                 </span>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Member since {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'N/A'}
-                            </p>
+                            
                         </div>
                     </div>
                 </CardHeader>
