@@ -11,7 +11,6 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Home from "@/pages/Home";
 import Impact from "@/pages/Impact";
-import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ResetPassword from "@/pages/ResetPassword";
 import Donate from "@/pages/user/Donate";
@@ -21,12 +20,14 @@ import UserProfile from "@/pages/user/UserProfile";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminProfile from "./pages/admin/AdminProfile";
+import VerifyNgo from "./pages/admin/VerifyNgo";
 import NgoDashboard from "./pages/ngo/NgoDashboard";
 import NgoLogin from "./pages/ngo/NgoLogin";
 import NgoProfile from "./pages/ngo/NgoProfile";
 import NgoRegister from "./pages/ngo/NgoRegister";
 import NotFound from "./pages/NotFound";
 import HelpSupport from "./pages/other/HelpSupport";
+import ClaimFood from "./pages/user/ClaimFood";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +40,7 @@ const App = () => (
         <Routes>
           {/* Public Routes with No Sidebar */}
           <Route path="/" element={<Home />} />
-          <Route path="/help-support" element={<HelpSupport />} />          
+          <Route path="/help-support" element={<HelpSupport />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/impact" element={<Impact />} />
             <Route path="/my-donations" element={<MyDonation />} />
+            <Route path="/claim-food" element={<ClaimFood />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
@@ -66,6 +68,7 @@ const App = () => (
             <Route path="/admin/donations" element={<AdminDonations />} />
             <Route path="/admin/donations/:donationId" element={<AdminDonationDetail />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/verify-ngo" element={<VerifyNgo />} />
           </Route>
 
           {/* NGO Routes */}

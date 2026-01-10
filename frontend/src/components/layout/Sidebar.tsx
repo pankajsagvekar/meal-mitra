@@ -25,7 +25,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const menuItems = [
         { icon: Home, label: "Dashboard", path: "/user/dashboard" },
         { icon: Heart, label: "Donate Food", path: "/donate" },
-        { icon: HandHeart, label: "My Donation", path: "/my-donations" },
+        { icon: HandHeart, label: "Claim Food", path: "/claim-food" },
+        { icon: Heart, label: "My Donation", path: "/my-donations" },
     ];
 
     const bottomItems = [

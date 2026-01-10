@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Users } from "lucide-react";
+import { Heart, ShieldCheck, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const AdminDashboard = () => {
@@ -38,6 +38,22 @@ const AdminDashboard = () => {
                             <div className="text-2xl font-bold">View Users</div>
                             <p className="text-xs text-muted-foreground">
                                 Manage registered users and admins
+                            </p>
+                        </CardContent>
+                    </Card>
+                </Link>
+                <Link to="/admin/verify-ngo">
+                    <Card className="hover:shadow-lg transition-all cursor-pointer border-t-4 border-t-green-500">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Verify NGOs
+                            </CardTitle>
+                            <ShieldCheck className="h-4 w-4 text-green-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">Verify</div>
+                            <p className="text-xs text-muted-foreground">
+                                Review and approve NGO applications
                             </p>
                         </CardContent>
                     </Card>
