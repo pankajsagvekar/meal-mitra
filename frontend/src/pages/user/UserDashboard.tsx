@@ -26,8 +26,6 @@ const UserDashboard = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm border border-white/50">
-          <User className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">{username || "Loading..."}</span>
         </div>
       </div>
 
@@ -70,7 +68,7 @@ const UserDashboard = () => {
           </Card>
         </Link>
 
-        <Link to="/profile">
+        {/* <Link to="/profile">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -87,7 +85,7 @@ const UserDashboard = () => {
               </p>
             </CardContent>
           </Card>
-        </Link>
+        </Link> */}
       </div>
     </div>
   );

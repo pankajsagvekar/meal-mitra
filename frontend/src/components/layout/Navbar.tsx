@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
-import { Menu, ShoppingBag, User } from "lucide-react";
+import { Menu, ShoppingBag, User, Utensils } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -34,14 +34,15 @@ const Navbar = ({ toggleSidebar, onOpenAuth }: NavbarProps) => {
                         <Menu className="h-6 w-6 text-gray-600" />
                     </button>
                 )}
-                <Link to="/" className="flex items-center gap-2">
-                    <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center">
-                        <span className="text-white font-bold text-xl">M</span>
+                <div className="flex items-center gap-2">
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-orange-500 shadow-lg hover:scale-105 transition ">
+                        <Utensils className="w-5 h-5 text-white" />
                     </div>
+
                     <span className="font-bold text-xl tracking-tight hidden md:block">
-                        Meal-Mitra
+                        Meal Mitra
                     </span>
-                </Link>
+                </div>
             </div>
 
             <div className="flex items-center gap-4 ml-auto">
@@ -54,10 +55,15 @@ const Navbar = ({ toggleSidebar, onOpenAuth }: NavbarProps) => {
                             <ShoppingBag className="h-5 w-5" />
                             <span>Donate Food</span>
                         </Link>
-                        <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg">
-                            <User className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-medium text-primary">{username}</span>
-                        </div>
+                        <Link to="/profile" className="block">
+                            <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition cursor-pointer">
+                                <User className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-medium text-primary">
+                                    {username}
+                                </span>
+                            </div>
+                        </Link>
+
                     </>
                 ) : (
                     <div className="flex items-center gap-2">
