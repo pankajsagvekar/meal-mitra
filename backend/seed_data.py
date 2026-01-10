@@ -36,12 +36,31 @@ def seed_data():
                 password=hash_password("Test@123"),
                 is_admin=False,
                 address="Flat 101, Residency, Pune",
-                phone_number="8888888888"
+                phone_number="8888888888",
+                role="Individual",
+                verification_status="Approved"
             )
             session.add(test_user)
             logger.info("Test user created.")
             session.commit() # Commit to get ID for donation
             session.refresh(test_user)
+
+        # 2.1 Create Test Organization
+        org_email = "restaurant@mealmitra.com"
+        if not session.query(User).filter(User.email == org_email).first():
+            org = User(
+                username="spice_garden",
+                email=org_email,
+                password=hash_password("Org@123"),
+                is_admin=False,
+                address="Spice Garden, FC Road, Pune",
+                phone_number="02012345678",
+                role="Restaurant",
+                fssai_license="12345678901234",
+                verification_status="Approved"
+            )
+            session.add(org)
+            logger.info("Test Organization created.")
         
         # 3. Create Test Donation
         if test_user and not session.query(Donation).filter(Donation.user_id == test_user.id).first():

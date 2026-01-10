@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header-approved {
+            background: linear-gradient(135deg, #138808, #28a745);
+        }
+
+        .header-rejected {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .content {
+            padding: 30px;
+            text-align: center;
+            color: #333333;
+        }
+
+        .status-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555555;
+        }
+
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #888888;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header {{ 'header-approved' if status == 'Approved' else 'header-rejected' }}">
+            <h1>Organization Verification Update</h1>
+            <p>For {{ business_name }}</p>
+        </div>
+        <div class="content">
+            <div class="status-icon">
+                {{ '✅' if status == 'Approved' else '❌' }}
+            </div>
+            <h2>Status: {{ status }}</h2>
+            <p class="description">
+                {% if status == 'Approved' %}
+                Great news! Your organization account has been verified. You can now log in, schedule donations, and
+                effectively manage your surplus food.
+                {% else %}
+                We regret to inform you that your organization registration has been declined. This may be due to
+                invalid FSSAI details or incomplete documentation.
+                {% endif %}
+            </p>
+            {% if status == 'Approved' %}
+            <a href="http://localhost:3000/login" class="cta-button">Login to Dashboard</a>
+            {% endif %}
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Meal-Mitra. Reducing waste, feeding consistency.</p>
+        </div>
+    </div>
+</body>
+
+</html>

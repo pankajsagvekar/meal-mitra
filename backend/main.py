@@ -10,6 +10,9 @@ import re
 import os
 import logging
 import json
+import random
+import string
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from groq import Groq
 import bcrypt
@@ -106,15 +109,21 @@ class UserBase(BaseModel):
     email: Optional[str] = None
     address: Optional[str] = None
     phone_number: Optional[str] = None
+    role: Optional[str] = "Individual" # Individual, Restaurant, Mess, Canteen, Hotel
 
 class UserCreate(UserBase):
     email: str
     password: str
+    fssai_license: Optional[str] = None
+    document_proof: Optional[str] = None
 
 class UserResponse(UserBase):
     id: int
     email: str
     is_admin: bool
+    verification_status: str
+    fssai_license: Optional[str]
+    
     class Config:
         from_attributes = True
 
@@ -258,6 +267,12 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     address = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
+    
+    # Organization specific fields
+    role = Column(String, default="Individual")
+    fssai_license = Column(String, nullable=True)
+    document_proof = Column(String, nullable=True)
+    verification_status = Column(String, default="Approved") # Individuals are auto-approved
 
 class Donation(Base):
     __tablename__ = "donations"
@@ -274,6 +289,12 @@ class Donation(Base):
     price = Column(Integer, default=0)
     status = Column(String, default="Available")
     is_ngo_only = Column(Boolean, default=False)
+    
+    # Verification details
+    claimed_by_user_id = Column(Integer, nullable=True)
+    claimed_by_ngo_id = Column(Integer, nullable=True)
+    claim_secret = Column(String, nullable=True) # OTP
+    otp_created_at = Column(String, nullable=True) # ISO Timestamp
 
 class NGO(Base):
     __tablename__ = "ngos"
@@ -574,6 +595,45 @@ async def send_ngo_status_email(email: str, ngo_name: str, status: str):
     except Exception as e:
         logger.error(f"Failed to send NGO status email to {email}: {e}")
 
+async def send_donation_otp_email(email: str, otp: str, food_name: str, claimer_name: str):
+    """Background task to send Donation OTP."""
+    logger.info(f"Sending Donation OTP to {email}")
+    message = MessageSchema(
+        subject=f"Action Required: Verify Donation Handover (OTP: {otp})",
+        recipients=[email],
+        template_body={
+            "otp": otp,
+            "food_name": food_name,
+            "claimer_name": claimer_name
+        },
+        subtype=MessageType.html
+    )
+    fm = FastMail(conf)
+    try:
+        await fm.send_message(message, template_name="donation_claim_email.html")
+        logger.info(f"OTP email sent to {email}")
+    except Exception as e:
+        logger.error(f"Failed to send OTP email to {email}: {e}")
+
+async def send_org_status_email(email: str, business_name: str, status: str):
+    """Background task to send Organization approval/rejection email."""
+    logger.info(f"Sending Organization status email to {email} ({status})")
+    message = MessageSchema(
+        subject=f"Meal Mitra Organization Registration: {status}",
+        recipients=[email],
+        template_body={
+            "business_name": business_name,
+            "status": status
+        },
+        subtype=MessageType.html
+    )
+    fm = FastMail(conf)
+    try:
+        await fm.send_message(message, template_name="org_verification_email.html")
+        logger.info(f"Organization status email sent to {email}")
+    except Exception as e:
+        logger.error(f"Failed to send Organization status email to {email}: {e}")
+
 def check_and_unlock_badges(user_id: int, db: Session, background_tasks: Optional[BackgroundTasks] = None):
     impact = calculate_user_impact(user_id, db)
     owned_badges = {b.badge_name for b in db.query(UserBadge).filter(UserBadge.user_id == user_id).all()}
@@ -736,6 +796,38 @@ def register(
 
     return {"message": "User registered successfully"}
 
+@app.post("/register/organization", response_model=dict, status_code=status.HTTP_201_CREATED, tags=["Auth"])
+def register_organization(
+    business_name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    role: str = Form(...), # Restaurant, Mess, Canteen
+    fssai_license: str = Form(...),
+    address: str = Form(...),
+    phone_number: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    email = email.strip().lower()
+    logger.info(f"Registering organization: {business_name} ({email}) as {role}")
+    
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user = User(
+        username=business_name, # Use business name as username
+        email=email,
+        password=hash_password(password),
+        address=address,
+        phone_number=phone_number,
+        role=role,
+        fssai_license=fssai_license,
+        verification_status="Applied" # Default pending
+    )
+    db.add(user)
+    db.commit()
+
+    return {"message": "Organization registered successfully. Please wait for admin verification."}
+
 @app.post("/forgot-password", response_model=dict, tags=["Auth"])
 async def forgot_password(
     email: str = Form(...),
@@ -807,6 +899,13 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Invalid credentials"
+        )
+    
+    if user.verification_status != "Approved":
+        logger.warning(f"Login denied: User '{username}' is {user.verification_status}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Account is {user.verification_status}. Please wait for admin verification."
         )
 
     request.session["user_id"] = user.id
@@ -1068,22 +1167,98 @@ def claim_donation(
     else:
         # Public donation
         if user_id:
-            logger.info(f"User ID {user_id} is claiming public donation ID: {donation_id} (Price: {donation.price})")
+             logger.info(f"User ID {user_id} is claiming public donation ID: {donation_id}")
         elif ngo_id:
-            logger.info(f"NGO ID {ngo_id} is claiming public donation ID: {donation_id} (Price: {donation.price})")
-
+             logger.info(f"NGO ID {ngo_id} is claiming public donation ID: {donation_id}")
+    
+    # Generate OTP
+    otp = "".join(random.choices(string.digits, k=6))
+    
     donation.status = "Claimed"
+    donation.claim_secret = otp
+    donation.otp_created_at = datetime.utcnow().isoformat()
+    
+    if ngo_id:
+        donation.claimed_by_ngo_id = ngo_id
+        claimer = db.query(NGO).filter(NGO.id == ngo_id).first()
+        claimer_name = claimer.name
+        claimer_email = claimer.email
+    else:
+        donation.claimed_by_user_id = user_id
+        claimer = db.query(User).filter(User.id == user_id).first()
+        claimer_name = claimer.username
+        claimer_email = claimer.email
+        
     db.commit()
     
-    # Check for donor's badges (NGOs served, KG saved milestones etc.)
-    check_and_unlock_badges(donation.user_id, db, background_tasks)
+    # Send OTP to Donor and Claimer
+    donor = db.query(User).filter(User.id == donation.user_id).first()
+    if donor:
+        background_tasks.add_task(send_donation_otp_email, donor.email, otp, donation.food, claimer_name)
+    background_tasks.add_task(send_donation_otp_email, claimer_email, otp, donation.food, claimer_name)
+
+    # Check for badges
+    check_and_unlock_badges(user_id or ngo_id, db, background_tasks)
+
+    return {"message": "Donation claimed successfully. Check your email for the OTP verification code."}
+
+@app.post("/donations/{donation_id}/verify", response_model=dict, tags=["Donations"])
+def verify_donation_claim(
+    donation_id: int,
+    otp: str = Form(...),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Verify the OTP to complete the donation handover."""
+    donation = db.query(Donation).filter(Donation.id == donation_id).first()
+    if not donation:
+        raise HTTPException(status_code=404, detail="Donation not found")
+        
+    # Only Donor or Claimer can verify (in this design, we trust the Donor to output the code or Claimer to provide it)
+    # Ideally, the Donor enters the code given by Claimer.
+    if donation.user_id != user.id:
+         raise HTTPException(status_code=403, detail="Only the donor can verify the handover")
+         
+    if donation.status != "Claimed":
+        raise HTTPException(status_code=400, detail=f"Donation is in {donation.status} state")
+        
+    # Check OTP
+    if donation.claim_secret != otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+        
+    # Check Expiry (1 hour)
+    if donation.otp_created_at:
+        created_at = datetime.fromisoformat(donation.otp_created_at)
+        if datetime.utcnow() - created_at > timedelta(hours=1):
+            donation.status = "Available" # Reset? Or Expired? Let's reset to Available so someone else can claim.
+            donation.claim_secret = None
+            donation.claimed_by_user_id = None
+            donation.claimed_by_ngo_id = None
+            db.commit()
+            raise HTTPException(status_code=400, detail="OTP Expired. Donation has been made available again.")
+
+    donation.status = "Completed"
+    db.commit()
     
-    return {
-        "message": "Donation claimed successfully",
-        "status": "Claimed",
-        "is_ngo_only": donation.is_ngo_only,
-        "price_paid": donation.price if not donation.is_ngo_only else 0
-    }
+    return {"message": "Donation verified and completed successfully!"}
+
+@app.get("/donations", response_model=List[DonationResponse], tags=["Donations"])
+def get_all_donations(db: Session = Depends(get_db)):
+    # Lazy Expiration Logic
+    now_iso = datetime.utcnow().isoformat()
+    available_donations = db.query(Donation).filter(Donation.status == "Available").all()
+    
+    expired_count = 0
+    for d in available_donations:
+        if d.safe_until and d.safe_until < now_iso:
+            d.status = "Expired"
+            expired_count += 1
+    
+    if expired_count > 0:
+        db.commit()
+        logger.info(f"Lazily expired {expired_count} donations")
+
+    return db.query(Donation).filter(Donation.status == "Available").all()
 
 @app.get("/my-donations", response_model=List[DonationResponse], tags=["Profile"])
 def my_donations(
@@ -1226,6 +1401,39 @@ async def admin_verify_ngo(
     background_tasks.add_task(send_ngo_status_email, ngo.email, ngo.name, ngo.registration_status)
     
     return {"message": f"NGO {ngo.name} status updated to {ngo.registration_status}"}
+
+@app.get("/admin/organizations", response_model=List[UserResponse], tags=["Admin"])
+def admin_get_organizations(admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    logger.info(f"Admin {admin.username} fetching organizations")
+    return db.query(User).filter(User.role != "Individual").all()
+
+@app.post("/admin/organizations/{user_id}/verify", response_model=dict, tags=["Admin"])
+async def admin_verify_organization(
+    user_id: int,
+    action: str, # 'approve' or 'reject'
+    background_tasks: BackgroundTasks,
+    admin: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    logger.info(f"Admin {admin.username} verifying User ID: {user_id} (Action: {action})")
+    org_user = db.query(User).filter(User.id == user_id).first()
+    
+    if not org_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if action == "approve":
+        org_user.verification_status = "Approved"
+    elif action == "reject":
+        org_user.verification_status = "Rejected"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+        
+    db.commit()
+    
+    # Send email
+    background_tasks.add_task(send_org_status_email, org_user.email, org_user.username, org_user.verification_status)
+    
+    return {"message": f"Organization {org_user.username} status updated to {org_user.verification_status}"}
 
 @app.get("/", tags=["General"])
 def root():
