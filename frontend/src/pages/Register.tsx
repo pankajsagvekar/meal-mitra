@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 const Register = () => {
     const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
 
@@ -18,6 +19,7 @@ const Register = () => {
         try {
             const formData = new URLSearchParams();
             formData.append("username", username);
+            formData.append("email", email);
             formData.append("password", password);
 
             await api.post("/register", formData);
@@ -25,7 +27,7 @@ const Register = () => {
             navigate("/login");
         } catch (error) {
             console.error("Registration error:", error);
-            toast.error("Registration failed. Username might be taken.");
+            toast.error("Registration failed. Username or email might be taken.");
         }
     };
 
@@ -51,6 +53,18 @@ const Register = () => {
                                 placeholder="Choose a username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
+                                required
+                                className="h-11"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                                 className="h-11"
                             />

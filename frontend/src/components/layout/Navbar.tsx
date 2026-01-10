@@ -61,21 +61,22 @@ const Navbar = ({ toggleSidebar, onOpenAuth }: NavbarProps) => {
                     </>
                 ) : (
                     <div className="flex items-center gap-2">
-                        {/* User requested small size buttons */}
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onOpenAuth?.("login")}
-                            className="font-semibold"
-                        >
-                            Sign In
-                        </Button>
-                        <Button
-                            size="sm"
-                            onClick={() => onOpenAuth?.("register")}
-                        >
-                            Get Started
-                        </Button>
+                        <Link to="/login">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="font-semibold"
+                            >
+                                Sign In
+                            </Button>
+                        </Link>
+                        <Link to="/register">
+                            <Button
+                                size="sm"
+                            >
+                                Get Started
+                            </Button>
+                        </Link>
                     </div>
                 )}
             </div>
