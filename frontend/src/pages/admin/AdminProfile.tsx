@@ -29,7 +29,7 @@ const AdminProfile = () => {
             } catch (error) {
                 console.error("Failed to fetch profile:", error);
                 toast.error("Failed to load profile");
-                navigate("/login");
+                navigate("/");
             } finally {
                 setLoading(false);
             }

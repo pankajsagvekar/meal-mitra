@@ -18,7 +18,7 @@ const MainLayout = () => {
                 await api.get("/profile");
             } catch (error) {
                 console.error("Session verification failed:", error);
-                navigate("/login");
+                navigate("/");
             } finally {
                 setIsLoading(false);
             }

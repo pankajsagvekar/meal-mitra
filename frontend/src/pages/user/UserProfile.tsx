@@ -27,7 +27,7 @@ const UserProfile = () => {
             } catch (error) {
                 console.error("Failed to fetch profile:", error);
                 // If unauthorized, redirect to login
-                navigate("/login");
+                navigate("/");
             } finally {
                 setLoading(false);
             }

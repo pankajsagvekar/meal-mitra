@@ -39,9 +39,9 @@ const MyDonation = () => {
       try {
         const res = await api.get("/my-donations");
         setDonations(res.data);
-      } catch (err) {
-        console.error("Fetch error:", err);
-        navigate("/login");
+      } catch (error: any) {
+        console.error("Failed to fetch donations:", error);
+        navigate("/");
       } finally {
         setLoading(false);
       }

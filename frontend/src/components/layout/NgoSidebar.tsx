@@ -24,7 +24,7 @@ const NgoSidebar = ({ isOpen, onClose }: NgoSidebarProps) => {
     };
 
     const links = [
-        { href: "/ngo-dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/ngo/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/ngo/claim", label: "Claim Food", icon: Search },
         { href: "/ngo/donations", label: "My Claims", icon: Heart },
         { href: "/ngo/profile", label: "Profile", icon: User },

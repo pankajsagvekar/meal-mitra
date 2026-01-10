@@ -35,7 +35,7 @@ const ResetPassword = () => {
             formData.append("new_password", password);
             await api.post("/reset-password", formData);
             toast.success("Password reset successful! Please login.");
-            navigate("/login");
+            navigate("/");
         } catch (error) {
             console.error("Reset Password error:", error);
             toast.error("Failed to reset password. Token may be invalid or expired.");
