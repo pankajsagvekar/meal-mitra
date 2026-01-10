@@ -14,26 +14,83 @@ interface UserProfile {
     createdAt?: string;
 }
 
+interface Badge {
+    name: string;
+    image: string;
+    level: number;
+    isAchieved: boolean;
+    slug: string;
+}
+
+const ALL_BADGES = [
+    { name: "Annadata", image: "/badge/level 1/annadata.png", level: 1, slug: "annadata" },
+    { name: "Bhojanamitra", image: "/badge/level 1/bhojanamitra.png", level: 1, slug: "bhojanamitra" },
+    { name: "Karunamaya", image: "/badge/level 1/karunamaya.png", level: 1, slug: "karunamaya" },
+    { name: "Annaraksaka", image: "/badge/level 2/annaraksaka.png", level: 2, slug: "annaraksaka" },
+    { name: "Dharamitra", image: "/badge/level 2/dharamitra.png", level: 2, slug: "dharamitra" },
+    { name: "Svacchasevaka", image: "/badge/level 2/svacchasevaka.png", level: 2, slug: "svacchasevaka" },
+    { name: "Bhukhahanta", image: "/badge/Level 3/bhukhahanta.png", level: 3, slug: "bhukhahanta" },
+    { name: "Haritasevaka", image: "/badge/Level 3/haritasevaka.png", level: 3, slug: "haritasevaka" },
+    { name: "Lokasevaka", image: "/badge/Level 3/lokasevaka.png", level: 3, slug: "lokasevaka" },
+    { name: "Annavira", image: "/badge/level 4/annavira.png", level: 4, slug: "annavira" },
+    { name: "Prakrtiraksaka", image: "/badge/level 4/prakrtiraksaka.png", level: 4, slug: "prakrtiraksaka" },
+    { name: "Sevasiromani", image: "/badge/level 4/sevasiromani.png", level: 4, slug: "sevasiromani" },
+    { name: "Annasamjivaka", image: "/badge/level 5/annasamjivaka.png", level: 5, slug: "annasamjivaka" },
+    { name: "Lokakalyanakarta", image: "/badge/level 5/lokakalyanakarta.png", level: 5, slug: "lokakalyanakarta" },
+    { name: "Mahasevaka", image: "/badge/level 5/mahasevaka.png", level: 5, slug: "mahasevaka" },
+];
+
 const UserProfile = () => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [badges, setBadges] = useState<Badge[]>([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchProfileData = async () => {
             try {
-                const response = await api.get("/profile");
-                setProfile(response.data.user);
+                const [profileRes, badgesRes] = await Promise.allSettled([ // Use Promise.allSettled to handle individual failures
+                    api.get("/profile"),
+                    api.get("/profile/badges")
+                ]);
+
+                if (profileRes.status === "fulfilled") {
+                    setProfile(profileRes.value.data.user);
+                } else {
+                    console.error("Failed to fetch profile data:", profileRes.reason);
+                    // If profile fetch fails, it's a critical error, redirect to login
+                    navigate("/");
+                    return; // Stop execution if profile data is not available
+                }
+
+                if (badgesRes.status === "fulfilled") {
+                    const earnedBadges = badgesRes.value?.data?.badges || [];
+                    const earnedSlugs = new Set(earnedBadges.map((b: any) => b.slug));
+
+                    // Merge master list with earned status
+                    const mergedBadges = ALL_BADGES.map(badge => ({
+                        ...badge,
+                        isAchieved: earnedSlugs.has(badge.slug)
+                    }));
+
+                    // Sort by level
+                    const sortedBadges = mergedBadges.sort((a, b) => a.level - b.level);
+                    setBadges(sortedBadges);
+                } else {
+                    console.warn("Failed to fetch badges, displaying all as unearned:", badgesRes.reason);
+                    setBadges(ALL_BADGES.map(b => ({ ...b, isAchieved: false })));
+                }
+
             } catch (error) {
-                console.error("Failed to fetch profile:", error);
-                // If unauthorized, redirect to login
+                console.error("An unexpected error occurred during profile data fetch:", error);
+                // Catch any other unexpected errors
                 navigate("/");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProfile();
+        fetchProfileData();
     }, [navigate]);
 
     if (loading) {
@@ -120,6 +177,50 @@ const UserProfile = () => {
                                 <p className="text-sm font-medium">{profile.address || 'Not provided'}</p>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="pt-4 border-t">
+                        <h3 className="text-lg font-semibold mb-4 text-primary">Earned Badges</h3>
+                        {badges.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                                {badges.map((badge, index) => (
+                                    <div
+                                        key={index}
+                                        className={`flex flex-col items-center p-3 rounded-xl border transition-all duration-300 ${badge.isAchieved
+                                            ? "bg-white border-primary/20 shadow-sm hover:shadow-md hover:scale-105"
+                                            : "bg-gray-50 border-gray-100 opacity-60 grayscale"
+                                            }`}
+                                    >
+                                        <div className="relative w-16 h-16 mb-2 flex items-center justify-center">
+                                            {badge.isAchieved && (
+                                                <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl animate-pulse"></div>
+                                            )}
+                                            <img
+                                                src={badge.image}
+                                                alt={badge.name}
+                                                className={`max-w-full max-h-full object-contain relative z-10 transition-all ${badge.isAchieved ? "drop-shadow-lg" : ""
+                                                    }`}
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=Badge';
+                                                }}
+                                            />
+                                        </div>
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${badge.isAchieved ? "text-primary" : "text-gray-400"
+                                            }`}>
+                                            Level {badge.level}
+                                        </span>
+                                        <span className={`text-xs font-semibold text-center leading-tight ${badge.isAchieved ? "text-gray-900" : "text-gray-500"
+                                            }`}>
+                                            {badge.name}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                                No badges earned yet. Start donating to earn badges!
+                            </p>
+                        )}
                     </div>
 
                     <div className="pt-4 border-t">
