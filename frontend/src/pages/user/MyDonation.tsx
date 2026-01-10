@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import api from "@/lib/api";
+import { formatDateTime } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Clock, MapPin, Package } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -143,7 +144,7 @@ const MyDonation = () => {
                           <div className="flex items-start gap-3 text-sm text-muted-foreground">
                             <Clock className="w-4 h-4 mt-0.5 shrink-0" />
                             <span className="font-medium text-foreground/80">Safe Until:</span>
-                            <span className="truncate">{d.safe_until}</span>
+                            <span className="truncate">{formatDateTime(d.safe_until)}</span>
                           </div>
                         )}
                       </div>

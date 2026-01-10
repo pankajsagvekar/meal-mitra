@@ -30,7 +30,7 @@ const ResetPassword = () => {
 
         setIsLoading(true);
         try {
-            const formData = new FormData();
+            const formData = new URLSearchParams();
             formData.append("token", token);
             formData.append("new_password", password);
             await api.post("/reset-password", formData);

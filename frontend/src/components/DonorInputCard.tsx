@@ -4,16 +4,17 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, MapPin, Mic, MicOff, Send } from "lucide-react";
+import { Clock, Loader2, MapPin, Mic, MicOff, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface DonorInputCardProps {
-  onSubmit: (data: { text: string; location: { lat: number; lng: number } | null }) => void;
+  onSubmit: (data: { text: string; location: { lat: number; lng: number } | null; cookedAt: string | null }) => void;
   isLoading: boolean;
 }
 
 const DonorInputCard = ({ onSubmit, isLoading }: DonorInputCardProps) => {
   const [text, setText] = useState("");
+  const [cookedAt, setCookedAt] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [autoLocation, setAutoLocation] = useState(true);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -113,7 +114,7 @@ const DonorInputCard = ({ onSubmit, isLoading }: DonorInputCardProps) => {
       });
       return;
     }
-    onSubmit({ text: text.trim(), location: autoLocation ? location : null });
+    onSubmit({ text: text.trim(), location: autoLocation ? location : null, cookedAt: cookedAt || null });
   };
 
   return (
@@ -145,7 +146,7 @@ const DonorInputCard = ({ onSubmit, isLoading }: DonorInputCardProps) => {
           <div className="space-y-4">
             <div className="relative">
               <Textarea
-                placeholder="e.g., 10 rotis, 2kg rice, dal for 5 people, prepared 2 hours ago..."
+                placeholder="e.g. 10 rotis, 2kg rice, dal for 5 people, prepared 2 hours ago..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 className="min-h-[140px] resize-none text-base rounded-xl border-border/50 focus:border-primary/50 transition-colors pr-14"
@@ -189,6 +190,25 @@ const DonorInputCard = ({ onSubmit, isLoading }: DonorInputCardProps) => {
                   </AnimatePresence>
                 </Button>
               </motion.div>
+            </div>
+
+            {/* Cooked At Input */}
+            <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl">
+              <div className="p-2 rounded-lg bg-orange-100 text-orange-600">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="cooked-at" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
+                  When was this prepared?
+                </Label>
+                <input
+                  id="cooked-at"
+                  type="datetime-local"
+                  value={cookedAt}
+                  onChange={(e) => setCookedAt(e.target.value)}
+                  className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium"
+                />
+              </div>
             </div>
 
             {/* Location Toggle */}

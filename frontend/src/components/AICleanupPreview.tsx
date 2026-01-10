@@ -1,6 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Utensils, Clock, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatDateTime } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, CheckCircle2, Clock, ShieldCheck, Utensils } from "lucide-react";
 
 export interface CleanedFoodData {
   foodName: string;
@@ -70,7 +71,7 @@ const AICleanupPreview = ({ data, isVisible }: AICleanupPreviewProps) => {
             >
               {/* Decorative gradient */}
               <div className="absolute top-0 left-0 right-0 h-1 gradient-primary" />
-              
+
               {/* Header */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 rounded-xl bg-primary/10">
@@ -123,7 +124,7 @@ const AICleanupPreview = ({ data, isVisible }: AICleanupPreviewProps) => {
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                       Safe Until
                     </p>
-                    <p className="font-semibold text-foreground">{data.safeUntil}</p>
+                    <p className="font-semibold text-foreground">{formatDateTime(data.safeUntil)}</p>
                   </div>
                 </motion.div>
 

@@ -5,7 +5,6 @@ import PickupTimeline from "@/components/PickupTimeline";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
 import { AnimatePresence, motion } from "framer-motion";
-import { Heart } from "lucide-react";
 import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router-dom";
@@ -38,7 +37,7 @@ const Donate = () => {
     const [showMap, setShowMap] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
 
-    const handleSubmit = async (data: { text: string; location: Location | null }) => {
+    const handleSubmit = async (data: { text: string; location: Location | null; cookedAt: string | null }) => {
         setIsProcessing(true);
         setShowPreview(false);
         setShowMap(false);
@@ -51,6 +50,9 @@ const Donate = () => {
             if (data.location) {
                 formData.append("lat", data.location.lat.toString());
                 formData.append("lng", data.location.lng.toString());
+            }
+            if (data.cookedAt) {
+                formData.append("cooked_at", data.cookedAt);
             }
 
             const response = await api.post("/donations", formData);
@@ -118,22 +120,6 @@ const Donate = () => {
             <Helmet>
                 <title>Donate Food | Meal-Mitra</title>
             </Helmet>
-
-            {/* Header Section */}
-            <motion.div
-                variants={item}
-                className="text-center space-y-4 max-w-2xl mx-auto pt-8"
-            >
-                <div className="inline-flex items-center justify-center p-3 bg-orange-100 rounded-2xl mb-2">
-                    <Heart className="w-8 h-8 text-orange-600 fill-orange-600" />
-                </div>
-                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-                    Make a Difference
-                </h1>
-                <p className="text-xl text-muted-foreground leading-relaxed">
-                    Your surplus food can save lives. Share your meal details below and we'll connect you with nearby NGOs instantly.
-                </p>
-            </motion.div>
 
             {/* Input Section */}
             <motion.div variants={item}>
