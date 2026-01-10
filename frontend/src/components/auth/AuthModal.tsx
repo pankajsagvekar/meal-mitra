@@ -51,7 +51,6 @@ const AuthModal = ({ isOpen, onClose, defaultTab = "login" }: AuthModalProps) =>
                     <TabsContent value="login">
                         <LoginForm onSuccess={() => {
                             onClose();
-                            navigate("/user/dashboard");
                         }} />
                     </TabsContent>
 

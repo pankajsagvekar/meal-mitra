@@ -1,13 +1,39 @@
 import AIChatWidget from "@/components/AIChatWidget";
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import api from "@/lib/api";
+import { useEffect, useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 
 const MainLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+    useEffect(() => {
+        const verifySession = async () => {
+            try {
+                await api.get("/profile");
+            } catch (error) {
+                console.error("Session verification failed:", error);
+                navigate("/login");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        verifySession();
+    }, [navigate]);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen">

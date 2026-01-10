@@ -22,8 +22,8 @@ const UserProfile = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const response = await api.get("/me");
-                setProfile(response.data);
+                const response = await api.get("/profile");
+                setProfile(response.data.user);
             } catch (error) {
                 console.error("Failed to fetch profile:", error);
                 // If unauthorized, redirect to login

@@ -1,7 +1,12 @@
+import AdminLayout from "@/components/layout/AdminLayout";
 import MainLayout from "@/components/layout/MainLayout";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminDonationDetail from "@/pages/admin/AdminDonationDetail";
+import AdminDonations from "@/pages/admin/AdminDonations";
+import AdminUsers from "@/pages/admin/AdminUsers";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Home from "@/pages/Home";
 import Impact from "@/pages/Impact";
@@ -41,6 +46,14 @@ const App = () => (
             <Route path="/my-donations" element={<MyDonation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
+          </Route>
+
+          {/* Admin Routes */}
+          <Route element={<AdminLayout />}>
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/donations" element={<AdminDonations />} />
+            <Route path="/admin/donations/:donationId" element={<AdminDonationDetail />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -13,9 +13,9 @@ const Navbar = ({ toggleSidebar, onOpenAuth }: NavbarProps) => {
     const [username, setUsername] = useState("");
 
     useEffect(() => {
-        api.get("/me")
+        api.get("/profile")
             .then((res) => {
-                setUsername(res.data.username);
+                setUsername(res.data.user.username);
             })
             .catch(() => {
                 // User not logged in

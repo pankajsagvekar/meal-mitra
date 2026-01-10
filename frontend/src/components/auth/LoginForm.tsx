@@ -25,11 +25,21 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
             formData.append("password", password);
 
             await api.post("/login", formData);
+
+            // Fetch profile to check if admin
+            const profileResponse = await api.get("/profile");
+            const isAdmin = profileResponse.data.user.is_admin;
+
             toast.success("Login successful!");
-            if (onSuccess) {
-                onSuccess();
+
+            if (isAdmin) {
+                navigate("/admin-dashboard");
             } else {
                 navigate("/user/dashboard");
+            }
+
+            if (onSuccess) {
+                onSuccess();
             }
         } catch (error) {
             console.error("Login error:", error);

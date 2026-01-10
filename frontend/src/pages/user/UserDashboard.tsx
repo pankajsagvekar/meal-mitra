@@ -9,8 +9,8 @@ const UserDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get("/me").then((res) => {
-      setUsername(res.data.username);
+    api.get("/profile").then((res) => {
+      setUsername(res.data.user.username);
     }).catch(() => {
       navigate("/login");
     });
