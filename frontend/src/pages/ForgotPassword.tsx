@@ -1,31 +1,31 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
+import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleForgotPassword = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setIsLoading(true);
         try {
-            const formData = new URLSearchParams();
+            const formData = new FormData();
             formData.append("email", email);
-
             await api.post("/forgot-password", formData);
-            toast.success("Recovery email sent if the account exists");
+            toast.success("Password reset link sent to your email.");
+            setEmail("");
         } catch (error) {
-            console.error("Forgot password error:", error);
-            toast.error("Failed to send recovery email. Please try again.");
+            console.error("Forgot Password error:", error);
+            toast.error("Failed to send reset link. Please check the email.");
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -42,7 +42,7 @@ const ForgotPassword = () => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -52,16 +52,18 @@ const ForgotPassword = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
+                                disabled={isLoading}
                                 className="h-11"
                             />
                         </div>
-                        <Button type="submit" disabled={loading} className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold text-base">
-                            {loading ? "Sending..." : "Send Reset Link"}
+                        <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold text-base" disabled={isLoading}>
+                            {isLoading ? "Sending..." : "Send Reset Link"}
                         </Button>
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-center">
-                    <Link to="/login" className="text-sm text-primary hover:underline font-semibold">
+                    <Link to="/login" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
+                        <ArrowLeft className="w-4 h-4 mr-1" />
                         Back to Login
                     </Link>
                 </CardFooter>

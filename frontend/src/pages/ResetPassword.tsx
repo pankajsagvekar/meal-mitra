@@ -1,74 +1,56 @@
-
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 const ResetPassword = () => {
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [loading, setLoading] = useState(false);
     const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
     const token = searchParams.get("token");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!token) {
-            toast.error("Invalid or missing reset token");
-            // Optional: navigate to login or show error
-        }
-    }, [token]);
-
-    const handleResetPassword = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (newPassword !== confirmPassword) {
+        if (password !== confirmPassword) {
             toast.error("Passwords do not match");
             return;
         }
 
         if (!token) {
-            toast.error("Missing reset token");
+            toast.error("Invalid or missing reset token");
             return;
         }
 
-        setLoading(true);
+        setIsLoading(true);
         try {
-            const formData = new URLSearchParams();
+            const formData = new FormData();
             formData.append("token", token);
-            formData.append("new_password", newPassword);
-
+            formData.append("new_password", password);
             await api.post("/reset-password", formData);
-            toast.success("Password updated successfully! Please login.");
+            toast.success("Password reset successful! Please login.");
             navigate("/login");
         } catch (error) {
-            console.error("Reset password error:", error);
+            console.error("Reset Password error:", error);
             toast.error("Failed to reset password. Token may be invalid or expired.");
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
     if (!token) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-                <Card className="w-full max-w-md shadow-lg">
-                    <CardHeader>
-                        <CardTitle className="text-red-600">Invalid Link</CardTitle>
-                        <CardDescription>
-                            This password reset link is invalid or missing the token.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardFooter className="flex justify-center">
-                        <Link to="/login" className="text-primary hover:underline font-semibold">
-                            Back to Login
-                        </Link>
-                    </CardFooter>
-                </Card>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center p-8">
+                    <h2 className="text-xl font-bold text-red-600 mb-2">Invalid Link</h2>
+                    <p className="text-gray-600">The password reset link is invalid or missing a token.</p>
+                </div>
             </div>
         );
     }
@@ -86,41 +68,38 @@ const ResetPassword = () => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleResetPassword} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="newPassword">New Password</Label>
+                            <Label htmlFor="password">New Password</Label>
                             <Input
-                                id="newPassword"
+                                id="password"
                                 type="password"
                                 placeholder="Enter new password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
+                                disabled={isLoading}
                                 className="h-11"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
+                            <Label htmlFor="confirm-password">Confirm Password</Label>
                             <Input
-                                id="confirmPassword"
+                                id="confirm-password"
                                 type="password"
                                 placeholder="Confirm new password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
+                                disabled={isLoading}
                                 className="h-11"
                             />
                         </div>
-                        <Button type="submit" disabled={loading} className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold text-base">
-                            {loading ? "Resetting..." : "Reset Password"}
+                        <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold text-base" disabled={isLoading}>
+                            {isLoading ? "Resetting..." : "Reset Password"}
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                    <Link to="/login" className="text-sm text-primary hover:underline font-semibold">
-                        Back to Login
-                    </Link>
-                </CardFooter>
             </Card>
         </div>
     );
