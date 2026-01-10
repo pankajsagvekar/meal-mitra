@@ -7,3 +7,4 @@ python-multipart
 sqlalchemy
 itsdangerous
 fastapi-mail
+psycopg2-binary
