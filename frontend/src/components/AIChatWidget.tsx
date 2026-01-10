@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AnimatePresence, motion } from "framer-motion";
+import { Bot, Loader2, MessageCircle, Send, User, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface Message {
   id: string;
@@ -55,7 +55,8 @@ const AIChatWidget = () => {
     setIsTyping(true);
 
     try {
-      const response = await fetch("http://localhost:8000/chat", {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+      const response = await fetch(`${baseUrl}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
