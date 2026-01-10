@@ -1,6 +1,7 @@
 import axios from "axios";
 
-export const BASE_URL = "https://meal-mitra.onrender.com";
+// Use environment variable if available, otherwise fallback to Render (prod) or localhost (if needed)
+export const BASE_URL = import.meta.env.VITE_API_URL || "https://meal-mitra.onrender.com";
 
 const api = axios.create({
     baseURL: BASE_URL,

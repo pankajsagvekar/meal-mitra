@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://meal-mitra.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL || "https://meal-mitra.onrender.com",
   withCredentials: true,
 });
 
