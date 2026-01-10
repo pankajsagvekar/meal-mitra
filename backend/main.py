@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Request, Form, HTTPException, status
+from fastapi import FastAPI, Depends, Request, Form, HTTPException, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy import Column, Integer, String, Text, Boolean, create_engine
@@ -32,7 +32,20 @@ logger = logging.getLogger("meal-mitra")
 # -------------------------------------------------
 # APP SETUP
 # -------------------------------------------------
-app = FastAPI(title="Meal-Mitra API", version="1.1.0")
+tags_metadata = [
+    {"name": "Auth", "description": "Operations for user and NGO authentication (Login, Register, Logout, Password Reset)."},
+    {"name": "Profile", "description": "Operations for maintaining user-specific data (Profiles, Badges, History)."},
+    {"name": "Donations", "description": "Core operations for submitting and claiming food donations."},
+    {"name": "NGO", "description": "Operations specifically for NGOs (Register, Login, NGO-restricted profile)."},
+    {"name": "Admin", "description": "Privileged operations for system administrators (User/Donation management)."},
+    {"name": "General", "description": "General system operations."}
+]
+
+app = FastAPI(
+    title="Meal-Mitra API", 
+    version="1.1.0",
+    openapi_tags=tags_metadata
+)
 
 SECRET_KEY = os.getenv("SESSION_SECRET_KEY", "CHANGE_THIS_SECRET_KEY")
 SALT = os.getenv("RESET_PASSWORD_SALT", "meal-mitra-reset-salt")
@@ -505,11 +518,37 @@ def calculate_user_impact(user_id: int, db: Session):
         "safe_count": len([d for d in donations if d.food != "unknown"]) # Mock "safe" check
     }
 
-def check_and_unlock_badges(user_id: int, db: Session):
+async def send_badge_email(email: str, badge_info: dict):
+    """Background task to send badge notification email."""
+    logger.info(f"Preparing to send badge email to {email} for {badge_info['name']}")
+    message = MessageSchema(
+        subject=f"Meal Mitra Achievement: {badge_info['name']}!",
+        recipients=[email],
+        template_body={
+            "badge_name": badge_info["name"],
+            "sanskrit_name": badge_info["sanskrit"],
+            "description": badge_info["description"],
+            "icon_url": badge_info["icon_url"]
+        },
+        subtype=MessageType.html
+    )
+    fm = FastMail(conf)
+    try:
+        await fm.send_message(message, template_name="badge_notification_email.html")
+        logger.info(f"Badge email successfully sent to {email}")
+    except Exception as e:
+        logger.error(f"Background email failed for {email}: {e}")
+
+def check_and_unlock_badges(user_id: int, db: Session, background_tasks: Optional[BackgroundTasks] = None):
     impact = calculate_user_impact(user_id, db)
     owned_badges = {b.badge_name for b in db.query(UserBadge).filter(UserBadge.user_id == user_id).all()}
     
-    new_badges = []
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or not user.email:
+        logger.warning(f"Cannot check badges for user ID {user_id}: User not found or no email")
+        return []
+
+    new_badges_unlocked = []
     
     for defn in BADGE_DEFINITIONS:
         if defn["name"] in owned_badges:
@@ -539,13 +578,19 @@ def check_and_unlock_badges(user_id: int, db: Session):
                 unlocked_at=datetime.now().isoformat()
             )
             db.add(badge)
-            new_badges.append(defn["name"])
+            new_badges_unlocked.append(defn)
             
-    if new_badges:
+    if new_badges_unlocked:
         db.commit()
-        logger.info(f"User {user_id} unlocked new badges: {', '.join(new_badges)}")
+        badge_names = [b["name"] for b in new_badges_unlocked]
+        logger.info(f"User {user_id} unlocked new badges: {', '.join(badge_names)}")
+        
+        # Trigger background emails
+        if background_tasks:
+            for b_info in new_badges_unlocked:
+                background_tasks.add_task(send_badge_email, user.email, b_info)
     
-    return new_badges
+    return [b["name"] for b in new_badges_unlocked]
 
 # -------------------------------------------------
 # FOOD PARSER (Groq AI)
@@ -624,7 +669,7 @@ def parse_food_text(text: str) -> ParsedFood:
 # -------------------------------------------------
 # AUTH ROUTES
 # -------------------------------------------------
-@app.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
+@app.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED, tags=["Auth"])
 def register(
     username: str = Form(...),
     email: str = Form(...),
@@ -651,7 +696,7 @@ def register(
 
     return {"message": "User registered successfully"}
 
-@app.post("/forgot-password", response_model=dict)
+@app.post("/forgot-password", response_model=dict, tags=["Auth"])
 async def forgot_password(
     email: str = Form(...),
     db: Session = Depends(get_db)
@@ -685,7 +730,7 @@ async def forgot_password(
 
     return {"message": "Recovery email sent"}
 
-@app.post("/reset-password", response_model=dict)
+@app.post("/reset-password", response_model=dict, tags=["Auth"])
 def reset_password(
     token: str = Form(...),
     new_password: str = Form(...),
@@ -707,7 +752,7 @@ def reset_password(
 
     return {"message": "Password updated successfully"}
 
-@app.post("/login", response_model=dict)
+@app.post("/login", response_model=dict, tags=["Auth"])
 def login(
     request: Request,
     username: str = Form(...),
@@ -728,14 +773,14 @@ def login(
     logger.info(f"User '{username}' logged in successfully (ID: {user.id})")
     return {"message": "Login successful"}
 
-@app.post("/logout", response_model=dict)
+@app.post("/logout", response_model=dict, tags=["Auth"])
 def logout(request: Request):
     user_id = request.session.get("user_id")
     request.session.clear()
     logger.info(f"User ID {user_id} logged out")
     return {"message": "Logged out successfully"}
 
-@app.get("/profile", response_model=ProfileResponse)
+@app.get("/profile", response_model=ProfileResponse, tags=["Profile"])
 def get_profile(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"Fetching profile for user: {user.username}")
     donations = db.query(Donation).filter(Donation.user_id == user.id).all()
@@ -750,7 +795,7 @@ def get_profile(user: User = Depends(get_current_user), db: Session = Depends(ge
         "kg_saved": impact["kg_saved"]
     }
 
-@app.get("/profile/badges", response_model=List[BadgeResponse])
+@app.get("/profile/badges", response_model=List[BadgeResponse], tags=["Profile"])
 def get_user_badges(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"Fetching enriched badges for user: {user.username}")
     user_badges = db.query(UserBadge).filter(UserBadge.user_id == user.id).all()
@@ -775,7 +820,7 @@ def get_user_badges(user: User = Depends(get_current_user), db: Session = Depend
             
     return enriched_badges
 
-@app.patch("/profile", response_model=UserResponse)
+@app.patch("/profile", response_model=UserResponse, tags=["Profile"])
 def patch_profile(update: UserUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"Patching profile for user: {user.username}")
     if update.username is not None:
@@ -786,7 +831,7 @@ def patch_profile(update: UserUpdate, user: User = Depends(get_current_user), db
     db.refresh(user)
     return user
 
-@app.put("/profile", response_model=UserResponse)
+@app.put("/profile", response_model=UserResponse, tags=["Profile"])
 def put_profile(update: UserUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"Updating profile for user: {user.username}")
     user.username = update.username.strip().lower() if update.username else user.username
@@ -798,7 +843,7 @@ def put_profile(update: UserUpdate, user: User = Depends(get_current_user), db: 
 # -------------------------------------------------
 # NGO ROUTES
 # -------------------------------------------------
-@app.post("/ngo/register", response_model=dict, status_code=status.HTTP_201_CREATED)
+@app.post("/ngo/register", response_model=dict, status_code=status.HTTP_201_CREATED, tags=["NGO"])
 async def ngo_register(
     name: str = Form(...),
     email: str = Form(...),
@@ -831,7 +876,7 @@ async def ngo_register(
     db.commit()
     return {"message": "NGO registered and application status: Applied"}
 
-@app.post("/ngo/login", response_model=dict)
+@app.post("/ngo/login", response_model=dict, tags=["NGO"])
 def ngo_login(
     request: Request,
     email: str = Form(...),
@@ -852,11 +897,11 @@ def ngo_login(
     logger.info(f"NGO '{ngo.name}' logged in successfully (ID: {ngo.id})")
     return {"message": "NGO Login successful"}
 
-@app.get("/ngo/profile", response_model=NGOResponse)
+@app.get("/ngo/profile", response_model=NGOResponse, tags=["NGO"])
 def ngo_profile(ngo: NGO = Depends(get_current_ngo)):
     return ngo
 
-@app.patch("/ngo/profile", response_model=NGOResponse)
+@app.patch("/ngo/profile", response_model=NGOResponse, tags=["NGO"])
 def patch_ngo_profile(update: NGOUpdate, ngo: NGO = Depends(get_current_ngo), db: Session = Depends(get_db)):
     logger.info(f"Patching NGO profile for: {ngo.name}")
     if update.name is not None:
@@ -873,7 +918,7 @@ def patch_ngo_profile(update: NGOUpdate, ngo: NGO = Depends(get_current_ngo), db
     db.refresh(ngo)
     return ngo
 
-@app.put("/ngo/profile", response_model=NGOResponse)
+@app.put("/ngo/profile", response_model=NGOResponse, tags=["NGO"])
 def put_ngo_profile(update: NGOUpdate, ngo: NGO = Depends(get_current_ngo), db: Session = Depends(get_db)):
     logger.info(f"Updating NGO profile for: {ngo.name}")
     ngo.name = update.name.strip() if update.name else ngo.name
@@ -891,8 +936,9 @@ def put_ngo_profile(update: NGOUpdate, ngo: NGO = Depends(get_current_ngo), db: 
 # -------------------------------------------------
 # DONATION ROUTE
 # -------------------------------------------------
-@app.post("/donations", response_model=dict, status_code=status.HTTP_201_CREATED)
+@app.post("/donations", response_model=dict, status_code=status.HTTP_201_CREATED, tags=["Donations"])
 def donate_food(
+    background_tasks: BackgroundTasks,
     text: str = Form(...),
     lat: Optional[str] = Form(None),
     lng: Optional[str] = Form(None),
@@ -920,7 +966,7 @@ def donate_food(
     db.refresh(donation)
     
     # Check for badges (Annadātā, Friendly Helper, Kind Heart etc.)
-    check_and_unlock_badges(user.id, db)
+    check_and_unlock_badges(user.id, db, background_tasks)
 
     logger.info(f"Donation created successfully: ID {donation.id}")
     return {
@@ -928,10 +974,11 @@ def donate_food(
         "cleaned": parsed.model_dump()
     }
 
-@app.post("/donations/{donation_id}/claim", response_model=dict)
+@app.post("/donations/{donation_id}/claim", response_model=dict, tags=["Donations"])
 def claim_donation(
     donation_id: int,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     # Try to get either user or NGO from session
@@ -965,7 +1012,7 @@ def claim_donation(
     db.commit()
     
     # Check for donor's badges (NGOs served, KG saved milestones etc.)
-    check_and_unlock_badges(donation.user_id, db)
+    check_and_unlock_badges(donation.user_id, db, background_tasks)
     
     return {
         "message": "Donation claimed successfully",
@@ -974,7 +1021,7 @@ def claim_donation(
         "price_paid": donation.price if not donation.is_ngo_only else 0
     }
 
-@app.get("/my-donations", response_model=List[DonationResponse])
+@app.get("/my-donations", response_model=List[DonationResponse], tags=["Profile"])
 def my_donations(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -982,7 +1029,7 @@ def my_donations(
     logger.info(f"Fetching donations for user: {user.username}")
     return db.query(Donation).filter(Donation.user_id == user.id).all()
 
-@app.patch("/donations/{donation_id}", response_model=DonationResponse)
+@app.patch("/donations/{donation_id}", response_model=DonationResponse, tags=["Donations"])
 def patch_donation(donation_id: int, update: DonationUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"Patching donation ID: {donation_id} for user: {user.username}")
     donation = db.query(Donation).filter(Donation.id == donation_id, Donation.user_id == user.id).first()
@@ -1013,7 +1060,7 @@ def patch_donation(donation_id: int, update: DonationUpdate, user: User = Depend
     db.refresh(donation)
     return donation
 
-@app.put("/donations/{donation_id}", response_model=DonationResponse)
+@app.put("/donations/{donation_id}", response_model=DonationResponse, tags=["Donations"])
 def put_donation(donation_id: int, update: DonationUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"Updating donation ID: {donation_id} for user: {user.username}")
     donation = db.query(Donation).filter(Donation.id == donation_id, Donation.user_id == user.id).first()
@@ -1042,17 +1089,17 @@ def put_donation(donation_id: int, update: DonationUpdate, user: User = Depends(
 # -------------------------------------------------
 # ADMIN ROUTES
 # -------------------------------------------------
-@app.get("/admin/users", response_model=List[UserResponse])
+@app.get("/admin/users", response_model=List[UserResponse], tags=["Admin"])
 def admin_get_users(admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     logger.info(f"Admin {admin.username} is fetching all users")
     return db.query(User).all()
 
-@app.get("/admin/donations", response_model=List[DonationResponse])
+@app.get("/admin/donations", response_model=List[DonationResponse], tags=["Admin"])
 def admin_get_donations(admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     logger.info(f"Admin {admin.username} is fetching all donations")
     return db.query(Donation).all()
 
-@app.delete("/admin/donations/{donation_id}", response_model=dict)
+@app.delete("/admin/donations/{donation_id}", response_model=dict, tags=["Admin"])
 def admin_delete_donation(donation_id: int, admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     logger.info(f"Admin {admin.username} is deleting donation ID: {donation_id}")
     donation = db.query(Donation).filter(Donation.id == donation_id).first()
@@ -1063,7 +1110,7 @@ def admin_delete_donation(donation_id: int, admin: User = Depends(get_admin_user
     db.commit()
     return {"message": f"Donation {donation_id} deleted successfully"}
 
-@app.post("/admin/promote/{user_id}", response_model=dict)
+@app.post("/admin/promote/{user_id}", response_model=dict, tags=["Admin"])
 def admin_promote_user(user_id: int, admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     logger.info(f"Admin {admin.username} is promoting user ID: {user_id}")
     user = db.query(User).filter(User.id == user_id).first()
@@ -1074,6 +1121,6 @@ def admin_promote_user(user_id: int, admin: User = Depends(get_admin_user), db: 
     db.commit()
     return {"message": f"User {user.username} promoted to admin"}
 
-@app.get("/")
+@app.get("/", tags=["General"])
 def root():
     return {"status": "Meal-Mitra FastAPI backend (Admin Enabled) running", "version": "1.2.0"}
