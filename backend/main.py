@@ -97,12 +97,15 @@ class ParsedFood(BaseModel):
     quantity: Optional[str] = "unknown"
     location: Optional[str] = "unknown"
     safe_until: Optional[str] = None
+    cooked_at: Optional[str] = None
     price: Optional[float] = 0.0
     is_ngo_only: Optional[bool] = False
 
 class UserBase(BaseModel):
     username: str
     email: Optional[str] = None
+    address: Optional[str] = None
+    phone_number: Optional[str] = None
 
 class UserCreate(UserBase):
     email: str
@@ -118,6 +121,8 @@ class UserResponse(UserBase):
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
+    address: Optional[str] = None
+    phone_number: Optional[str] = None
 
 class ForgotPassword(BaseModel):
     email: str
@@ -137,6 +142,7 @@ class DonationUpdate(BaseModel):
     lng: Optional[str] = None
     price: Optional[float] = None
     location: Optional[str] = None
+    cooked_at: Optional[str] = None
 
 class DonationResponse(BaseModel):
     id: int
@@ -146,6 +152,7 @@ class DonationResponse(BaseModel):
     quantity: str
     location: str
     safe_until: Optional[str]
+    cooked_at: Optional[str]
     lat: Optional[str]
     lng: Optional[str]
     price: float
@@ -179,11 +186,13 @@ class NGOBase(BaseModel):
     name: str
     email: str
     ngo_type: str
+    id_proof: str
+    address_proof: str
+    address: Optional[str] = None
+    phone_number: Optional[str] = None
 
 class NGOCreate(NGOBase):
     password: str
-    id_proof: str
-    address_proof: str
 
 class NGOUpdate(BaseModel):
     name: Optional[str] = None
@@ -191,6 +200,8 @@ class NGOUpdate(BaseModel):
     ngo_type: Optional[str] = None
     id_proof: Optional[str] = None
     address_proof: Optional[str] = None
+    address: Optional[str] = None
+    phone_number: Optional[str] = None
 
 class NGOResponse(NGOBase):
     id: int
@@ -245,6 +256,8 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password = Column(String)
     is_admin = Column(Boolean, default=False)
+    address = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
 
 class Donation(Base):
     __tablename__ = "donations"
@@ -255,6 +268,7 @@ class Donation(Base):
     quantity = Column(String)
     location = Column(String)
     safe_until = Column(String)
+    cooked_at = Column(String, nullable=True)
     lat = Column(String, nullable=True)
     lng = Column(String, nullable=True)
     price = Column(Integer, default=0)
@@ -272,6 +286,8 @@ class NGO(Base):
     address_proof = Column(String)
     registration_status = Column(String, default="Applied")
     certificate_id = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
 
 class UserBadge(Base):
     __tablename__ = "user_badges"
@@ -539,6 +555,25 @@ async def send_badge_email(email: str, badge_info: dict):
     except Exception as e:
         logger.error(f"Background email failed for {email}: {e}")
 
+async def send_ngo_status_email(email: str, ngo_name: str, status: str):
+    """Background task to send NGO approval/rejection email."""
+    logger.info(f"Sending NGO status email to {email} ({status})")
+    message = MessageSchema(
+        subject=f"Meal Mitra NGO Registration: {status}",
+        recipients=[email],
+        template_body={
+            "ngo_name": ngo_name,
+            "status": status
+        },
+        subtype=MessageType.html
+    )
+    fm = FastMail(conf)
+    try:
+        await fm.send_message(message, template_name="ngo_verification_email.html")
+        logger.info(f"NGO status email sent to {email}")
+    except Exception as e:
+        logger.error(f"Failed to send NGO status email to {email}: {e}")
+
 def check_and_unlock_badges(user_id: int, db: Session, background_tasks: Optional[BackgroundTasks] = None):
     impact = calculate_user_impact(user_id, db)
     owned_badges = {b.badge_name for b in db.query(UserBadge).filter(UserBadge.user_id == user_id).all()}
@@ -598,8 +633,8 @@ def check_and_unlock_badges(user_id: int, db: Session, background_tasks: Optiona
 # -------------------------------------------------
 # FOOD PARSER (Groq AI)
 # -------------------------------------------------
-def parse_food_text(text: str) -> ParsedFood:
-    logger.info(f"Parsing food text: {text}")
+def parse_food_text(text: str, cooked_at: Optional[str] = None) -> ParsedFood:
+    logger.info(f"Parsing food text: {text} (Cooked At: {cooked_at})")
     
     if not GROQ_API_KEY:
         logger.warning("GROQ_API_KEY not found. Falling back to regex parser.")
@@ -627,27 +662,28 @@ def parse_food_text(text: str) -> ParsedFood:
             food=food,
             quantity=quantity,
             location=location,
+            cooked_at=cooked_at,
             safe_until=None
         )
 
     client = Groq(api_key=GROQ_API_KEY)
     
     prompt = f"""
-    The following text is a food donation message in any language (e.g., English, Hindi, Marathi, etc.): "{text}"
+    The following text is a food donation message: "{text}"
+    The user specified the food was cooked/bought at: "{cooked_at if cooked_at else 'Time not provided'}"
     
-    Extract the following details and return ONLY a JSON object:
-    - food (The type of food mentioned, translated to English if possible)
-    - quantity (The amount or weight mentioned, e.g., "10 kg", "2 packets")
-    - location (The place or landmark mentioned)
-    - safe_until (iso date or null if not mentioned)
-    - price (The expected price or cost mentioned, return 0 if not specified or if it's a free donation)
-    - is_ngo_only (Boolean: true if the donation is explicitly for NGOs or mentions work for charity/NGOS, false if for general public)
+    Extract details and return ONLY a JSON object:
+    - food (Type of food, translated to English)
+    - quantity (Amount/Weight)
+    - location (Place mentioned)
+    - price (Expected price, 0 if free)
+    - is_ngo_only (Boolean)
+    - cooked_at (The provided cooked_at time, or null)
+    - estimated_safety_hours (Integer: Estimate how many hours this specific food remains safe to consume at room temperature. e.g., Dal/Rice: 6, Bread: 24, Cooked Veg: 8, Milk: 4)
+    - safe_until (ISO format timestamp: If cooked_at is provided, add estimated_safety_hours to it. If cooked_at is null, return null)
     
-    Example input: "office mein 10 kg chawal bacha hai and price is 50"
-    Example output: {{"food": "rice", "quantity": "10 kg", "location": "office", "safe_until": null, "price": 50.0, "is_ngo_only": false}}
-    
-    Example input: "10 packets of milk for NGOs only, free of cost"
-    Example output: {{"food": "milk", "quantity": "10 packets", "location": "unknown", "safe_until": null, "price": 0.0, "is_ngo_only": true}}
+    Example input: "Dal Tadka", cooked_at="2026-01-10T10:00:00"
+    Example output: {{"food": "Dal Tadka", "quantity": "unknown", "location": "unknown", "price": 0.0, "is_ngo_only": false, "cooked_at": "2026-01-10T10:00:00", "estimated_safety_hours": 8, "safe_until": "2026-01-10T18:00:00"}}
     """
     
     try:
@@ -661,7 +697,7 @@ def parse_food_text(text: str) -> ParsedFood:
         return ParsedFood.model_validate_json(content)
     except Exception as e:
         logger.error(f"Groq Parsing Error: {e}")
-        return ParsedFood(food="unknown", quantity="unknown", location="unknown", safe_until=None)
+        return ParsedFood(food="unknown", quantity="unknown", location="unknown", cooked_at=cooked_at, safe_until=None)
 
 # -------------------------------------------------
 # AUTH ROUTES
@@ -674,6 +710,8 @@ def register(
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    address: Optional[str] = Form(None),
+    phone_number: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     username = username.strip().lower()
@@ -689,7 +727,9 @@ def register(
     user = User(
         username=username,
         email=email,
-        password=hash_password(password)
+        password=hash_password(password),
+        address=address,
+        phone_number=phone_number
     )
     db.add(user)
     db.commit()
@@ -827,6 +867,10 @@ def patch_profile(update: UserUpdate, user: User = Depends(get_current_user), db
         user.username = update.username.strip().lower()
     if update.email is not None:
         user.email = update.email.strip().lower()
+    if update.address is not None:
+        user.address = update.address
+    if update.phone_number is not None:
+        user.phone_number = update.phone_number
     db.commit()
     db.refresh(user)
     return user
@@ -836,6 +880,8 @@ def put_profile(update: UserUpdate, user: User = Depends(get_current_user), db: 
     logger.info(f"Updating profile for user: {user.username}")
     user.username = update.username.strip().lower() if update.username else user.username
     user.email = update.email.strip().lower() if update.email else user.email
+    user.address = update.address if update.address else user.address
+    user.phone_number = update.phone_number if update.phone_number else user.phone_number
     db.commit()
     db.refresh(user)
     return user
@@ -851,6 +897,8 @@ async def ngo_register(
     ngo_type: str = Form(...),
     id_proof: str = Form(...),
     address_proof: str = Form(...),
+    address: Optional[str] = Form(None),
+    phone_number: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     name = name.strip()
@@ -870,7 +918,9 @@ async def ngo_register(
         ngo_type=ngo_type,
         id_proof=id_proof,
         address_proof=address_proof,
-        registration_status="Applied"
+        registration_status="Applied",
+        address=address,
+        phone_number=phone_number
     )
     db.add(new_ngo)
     db.commit()
@@ -914,6 +964,10 @@ def patch_ngo_profile(update: NGOUpdate, ngo: NGO = Depends(get_current_ngo), db
         ngo.id_proof = update.id_proof
     if update.address_proof is not None:
         ngo.address_proof = update.address_proof
+    if update.address is not None:
+        ngo.address = update.address
+    if update.phone_number is not None:
+        ngo.phone_number = update.phone_number
     db.commit()
     db.refresh(ngo)
     return ngo
@@ -926,6 +980,8 @@ def put_ngo_profile(update: NGOUpdate, ngo: NGO = Depends(get_current_ngo), db: 
     ngo.ngo_type = update.ngo_type if update.ngo_type else ngo.ngo_type
     ngo.id_proof = update.id_proof if update.id_proof else ngo.id_proof
     ngo.address_proof = update.address_proof if update.address_proof else ngo.address_proof
+    ngo.address = update.address if update.address else ngo.address
+    ngo.phone_number = update.phone_number if update.phone_number else ngo.phone_number
     db.commit()
     db.refresh(ngo)
     return ngo
@@ -940,13 +996,14 @@ def put_ngo_profile(update: NGOUpdate, ngo: NGO = Depends(get_current_ngo), db: 
 def donate_food(
     background_tasks: BackgroundTasks,
     text: str = Form(...),
+    cooked_at: Optional[str] = Form(None),
     lat: Optional[str] = Form(None),
     lng: Optional[str] = Form(None),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     logger.info(f"User {user.username} (ID: {user.id}) is donating: {text}")
-    parsed = parse_food_text(text)
+    parsed = parse_food_text(text, cooked_at=cooked_at)
 
     donation = Donation(
         user_id=user.id,
@@ -955,6 +1012,7 @@ def donate_food(
         quantity=parsed.quantity or "unknown",
         location=parsed.location or "unknown",
         safe_until=parsed.safe_until,
+        cooked_at=parsed.cooked_at or cooked_at,
         lat=lat,
         lng=lng,
         price=parsed.price or 0,
@@ -999,8 +1057,14 @@ def claim_donation(
     if donation.is_ngo_only:
         if not ngo_id:
             raise HTTPException(status_code=403, detail="This donation is restricted to NGOs only")
+        
+        # Check if NGO is Approved
+        ngo = db.query(NGO).filter(NGO.id == ngo_id).first()
+        if not ngo or ngo.registration_status != "Approved":
+            raise HTTPException(status_code=403, detail="Only Approved NGOs can claim restricted donations. Please wait for admin verification.")
+
         # NGOs get it for free
-        logger.info(f"NGO ID {ngo_id} is claiming NGO-only donation ID: {donation_id}")
+        logger.info(f"NGO ID {ngo_id} ({ngo.name}) is claiming NGO-only donation ID: {donation_id}")
     else:
         # Public donation
         if user_id:
@@ -1041,11 +1105,14 @@ def patch_donation(donation_id: int, update: DonationUpdate, user: User = Depend
     if update.text is not None:
         donation.raw_text = update.text
         # Re-parse if text changed
-        parsed = parse_food_text(update.text)
+        new_cooked_at = update.cooked_at if update.cooked_at else donation.cooked_at
+        parsed = parse_food_text(update.text, cooked_at=new_cooked_at)
         donation.food = parsed.food or "unknown"
         donation.quantity = parsed.quantity or "unknown"
         donation.price = parsed.price or 0
         donation.is_ngo_only = parsed.is_ngo_only or False
+        donation.safe_until = parsed.safe_until
+        donation.cooked_at = parsed.cooked_at or new_cooked_at
 
     if update.location is not None:
         donation.location = update.location
@@ -1055,6 +1122,11 @@ def patch_donation(donation_id: int, update: DonationUpdate, user: User = Depend
         donation.lng = update.lng
     if update.price is not None:
         donation.price = update.price
+    if update.cooked_at is not None and update.text is None:
+        # If only cooked_at is updated, re-calculate safety with existing text
+        donation.cooked_at = update.cooked_at
+        parsed = parse_food_text(donation.raw_text, cooked_at=update.cooked_at)
+        donation.safe_until = parsed.safe_until
 
     db.commit()
     db.refresh(donation)
@@ -1073,7 +1145,7 @@ def put_donation(donation_id: int, update: DonationUpdate, user: User = Depends(
          raise HTTPException(status_code=400, detail="Text is required for full update")
 
     donation.raw_text = update.text
-    parsed = parse_food_text(update.text)
+    parsed = parse_food_text(update.text, cooked_at=update.cooked_at)
     donation.food = parsed.food or "unknown"
     donation.quantity = parsed.quantity or "unknown"
     donation.price = update.price if update.price is not None else (parsed.price or 0)
@@ -1081,6 +1153,8 @@ def put_donation(donation_id: int, update: DonationUpdate, user: User = Depends(
     donation.location = update.location if update.location else "unknown"
     donation.lat = update.lat
     donation.lng = update.lng
+    donation.cooked_at = parsed.cooked_at or update.cooked_at
+    donation.safe_until = parsed.safe_until
 
     db.commit()
     db.refresh(donation)
@@ -1120,6 +1194,38 @@ def admin_promote_user(user_id: int, admin: User = Depends(get_admin_user), db: 
     user.is_admin = True
     db.commit()
     return {"message": f"User {user.username} promoted to admin"}
+
+@app.get("/admin/ngos", response_model=List[NGOResponse], tags=["Admin"])
+def admin_get_ngos(admin: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    logger.info(f"Admin {admin.username} is fetching all NGOs")
+    return db.query(NGO).all()
+
+@app.post("/admin/ngos/{ngo_id}/verify", response_model=dict, tags=["Admin"])
+async def admin_verify_ngo(
+    ngo_id: int, 
+    action: str, # 'approve' or 'reject'
+    background_tasks: BackgroundTasks,
+    admin: User = Depends(get_admin_user), 
+    db: Session = Depends(get_db)
+):
+    logger.info(f"Admin {admin.username} is verifying NGO ID: {ngo_id} (Action: {action})")
+    ngo = db.query(NGO).filter(NGO.id == ngo_id).first()
+    if not ngo:
+        raise HTTPException(status_code=404, detail="NGO not found")
+    
+    if action == "approve":
+        ngo.registration_status = "Approved"
+    elif action == "reject":
+        ngo.registration_status = "Rejected"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action. Use 'approve' or 'reject'.")
+    
+    db.commit()
+    
+    # Send notification email
+    background_tasks.add_task(send_ngo_status_email, ngo.email, ngo.name, ngo.registration_status)
+    
+    return {"message": f"NGO {ngo.name} status updated to {ngo.registration_status}"}
 
 @app.get("/", tags=["General"])
 def root():
