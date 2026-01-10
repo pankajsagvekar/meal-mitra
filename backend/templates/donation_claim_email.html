@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+            text-align: center;
+            color: #333333;
+        }
+
+        .otp-box {
+            background-color: #e9ecef;
+            font-size: 32px;
+            letter-spacing: 5px;
+            font-weight: bold;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 2px dashed #007bff;
+            display: inline-block;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555555;
+        }
+
+        .warning {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Donation Claimed!</h1>
+        </div>
+        <div class="content">
+            <p class="description">
+                A donation has been claimed! To complete the handover, verify this One-Time Password (OTP) when you
+                meet.
+            </p>
+
+            <div class="otp-box">{{ otp }}</div>
+
+            <p class="description">
+                <strong>Donation:</strong> {{ food_name }}<br>
+                <strong>Claimed By:</strong> {{ claimer_name }}
+            </p>
+
+            <p class="warning">⚠️ This OTP is valid for 1 hour. Verify it only when you meet in person.</p>
+        </div>
+    </div>
+</body>
+
+</html>

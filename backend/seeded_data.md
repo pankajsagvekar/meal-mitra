@@ -16,7 +16,16 @@ Email: test@mealmitra.com
 Password: Test@123
 Capabilities: Donate Food, Claim Public Donations, Earn Badges
 Pre-seeded Data: Has 1 active donation ("5kg Rice and Daal")
-🏢 Test NGO
+� Test Organization
+Role: Verified Business (Restaurant)
+
+Username: spice_garden
+Email: restaurant@mealmitra.com
+Password: Org@123
+Role: Restaurant
+Status: Approved
+Capabilities: Bulk Donations, Schedule Pickups
+�🏢 Test NGO
 Role: Verified Non-Profit
 
 Name: Helping Hands Foundation
