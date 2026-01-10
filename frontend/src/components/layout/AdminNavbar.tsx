@@ -43,7 +43,7 @@ const AdminNavbar = ({ toggleSidebar }: AdminNavbarProps) => {
 
             <div className="flex items-center gap-4 ml-auto">
                 <Link
-                    to="/profile"
+                    to="/admin-profile"
                     className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
                 >
                     <User className="w-4 h-4 text-primary" />

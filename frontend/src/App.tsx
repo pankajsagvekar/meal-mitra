@@ -20,6 +20,7 @@ import UserProfile from "@/pages/user/UserProfile";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import NotFound from "./pages/NotFound";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
           {/* Admin Routes */}
           <Route element={<AdminLayout />}>
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-profile" element={<AdminProfile />} />
             <Route path="/admin/donations" element={<AdminDonations />} />
             <Route path="/admin/donations/:donationId" element={<AdminDonationDetail />} />
             <Route path="/admin/users" element={<AdminUsers />} />
