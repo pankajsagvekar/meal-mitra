@@ -36,21 +36,7 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
             onSuccess?.();
         } catch (error: any) {
             console.error("Registration error:", error);
-
-            let message = "Registration failed";
-
-            if (error.response?.data) {
-                const data = error.response.data;
-
-                if (Array.isArray(data.detail)) {
-                    message = data.detail.map((err: any) => err.msg).join(", ");
-                } else if (typeof data.detail === "string") {
-                    message = data.detail;
-                } else if (typeof data.message === "string") {
-                    message = data.message;
-                }
-            }
-
+            const message = error.response?.data?.detail || error.response?.data?.message || "Registration failed";
             toast.error(message);
         } finally {
             setIsLoading(false);

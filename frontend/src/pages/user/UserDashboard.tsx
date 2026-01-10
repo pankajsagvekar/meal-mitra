@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/api";
-import { Heart, Leaf, User } from "lucide-react";
+import { Heart, Leaf } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -12,7 +12,7 @@ const UserDashboard = () => {
     api.get("/profile").then((res) => {
       setUsername(res.data.user.username);
     }).catch(() => {
-      navigate("/login");
+      navigate("/");
     });
   }, [navigate]);
 
@@ -49,7 +49,7 @@ const UserDashboard = () => {
           </Card>
         </Link>
 
-        <Link to="/my-donation">
+        <Link to="/my-donations">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

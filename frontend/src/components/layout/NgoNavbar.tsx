@@ -32,7 +32,7 @@ const NgoNavbar = ({ toggleSidebar }: NgoNavbarProps) => {
                     </button>
                 )}
 
-                <Link to="/ngo-dashboard" className="flex items-center gap-2">
+                <Link to="/ngo/dashboard" className="flex items-center gap-2">
                     <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-orange-600 shadow-lg hover:scale-105 transition">
                         <Utensils className="w-5 h-5 text-white" />
                     </div>

@@ -20,7 +20,7 @@ const AdminLayout = () => {
                 }
             } catch (error) {
                 console.error("Admin verification failed:", error);
-                navigate("/login");
+                navigate("/");
             } finally {
                 setIsLoading(false);
             }

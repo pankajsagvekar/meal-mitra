@@ -94,7 +94,7 @@ const Donate = () => {
                     description: "Please log in to donate food.",
                     variant: "destructive",
                 });
-                navigate("/login");
+                navigate("/");
                 return;
             }
 

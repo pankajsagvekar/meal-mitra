@@ -11,6 +11,7 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Home from "@/pages/Home";
 import Impact from "@/pages/Impact";
+import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ResetPassword from "@/pages/ResetPassword";
 import Donate from "@/pages/user/Donate";
@@ -37,7 +38,7 @@ const App = () => (
         <Routes>
           {/* Public Routes with No Sidebar */}
           <Route path="/" element={<Home />} />
-          {/* <Route path="/login" element={<Login />} /> */}
+          
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -68,7 +69,7 @@ const App = () => (
 
           {/* NGO Routes */}
           <Route element={<NgoLayout />}>
-            <Route path="/ngo-dashboard" element={<NgoDashboard />} />
+            <Route path="/ngo/dashboard" element={<NgoDashboard />} />
             <Route path="/ngo/profile" element={<NgoProfile />} />
           </Route>
         </Routes>

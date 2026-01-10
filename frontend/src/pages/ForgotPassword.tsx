@@ -62,7 +62,7 @@ const ForgotPassword = () => {
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-center">
-                    <Link to="/login" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
+                    <Link to="/" className="text-primary hover:underline font-medium inline-flex items-center gap-1">
                         <ArrowLeft className="w-4 h-4 mr-1" />
                         Back to Login
                     </Link>

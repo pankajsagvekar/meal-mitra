@@ -20,7 +20,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const formData = new URLSearchParams();
+            const formData = new FormData();
             formData.append("username", username);
             formData.append("password", password);
 
@@ -41,9 +41,10 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
             if (onSuccess) {
                 onSuccess();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Login error:", error);
-            toast.error("Invalid credentials");
+            const message = error.response?.data?.detail || error.response?.data?.message || "Invalid credentials or server error";
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }
