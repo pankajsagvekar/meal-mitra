@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-dotenv
+groq
+passlib[bcrypt]
+python-multipart
+sqlalchemy
+itsdangerous
+fastapi-mail
