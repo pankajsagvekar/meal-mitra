@@ -37,10 +37,18 @@ const NgoLogin = () => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50/50">
             <Link to="/" className="mb-8 self-start ml-4 md:ml-0">
-                <Button variant="ghost" className="gap-2">
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Home
-                </Button>
+                
+    <Button
+        variant="ghost"
+        className="absolute top-4 left-4 gap-2"
+    >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Home
+    </Button>
+
+    {/* rest of your page content */}
+
+
             </Link>
 
             <Card className="w-full max-w-md shadow-xl border-orange-100">

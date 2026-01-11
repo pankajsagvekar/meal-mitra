@@ -54,7 +54,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
     };
 
     return (
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-3">
             <div className="space-y-2">
                 <Label htmlFor="login-username">Username</Label>
                 <Input
@@ -72,7 +72,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
                     <Label htmlFor="login-password">Password</Label>
                     <Link
                         to="/forgot-password"
-                        className="text-sm font-medium text-primary hover:underline"
+                        className="text-sm font-medium text-orange-500 hover:underline"
                     >
                         Forgot Password?
                     </Link>
@@ -87,7 +87,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
                     disabled={isLoading}
                 />
             </div>
-            <Button type="submit" className="w-full bg-primary font-bold" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 font-bold" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
             </Button>
         </form>

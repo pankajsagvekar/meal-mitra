@@ -44,11 +44,12 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
     };
 
     return (
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-3">
             <div className="space-y-2">
                 <Label htmlFor="register-username">Username</Label>
                 <Input
                     id="register-username"
+                    placeholder="Choose a username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     disabled={isLoading}
@@ -61,6 +62,7 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
                 <Input
                     id="register-email"
                     type="email"
+                    placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
@@ -73,6 +75,7 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
                 <Input
                     id="register-password"
                     type="password"
+                    placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
@@ -80,7 +83,7 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
                 />
             </div>
 
-            <Button disabled={isLoading} className="w-full">
+            <Button disabled={isLoading} className="w-full bg-orange-500 hover:bg-orange-600 font-bold">
                 {isLoading ? "Creating account..." : "Sign Up"}
             </Button>
         </form>
