@@ -542,10 +542,42 @@ BADGE_DEFINITIONS = [
 ]
 
 def parse_kg(quantity_str: str) -> float:
+    if not quantity_str:
+        return 0.0
+    
+    q = quantity_str.lower().strip()
+    
     try:
-        match = re.search(r"(\d+(\.\d+)?)\s*(kg|kgs|kilogram)", quantity_str.lower())
-        if match:
-            return float(match.group(1))
+        # 1. Check for specific units
+        # KG
+        match_kg = re.search(r"(\d+(\.\d+)?)\s*(kg|kgs|kilogram)", q)
+        if match_kg:
+            return float(match_kg.group(1))
+            
+        # Grams
+        match_g = re.search(r"(\d+(\.\d+)?)\s*(g|gm|gms|gram|grams)", q)
+        if match_g:
+            return float(match_g.group(1)) / 1000.0
+            
+        # Plates/Meals/Packets (Approx 0.4kg per meal)
+        match_meal = re.search(r"(\d+(\.\d+)?)\s*(plate|plates|meal|meals|packet|packets|serving|servings|pax)", q)
+        if match_meal:
+            count = float(match_meal.group(1))
+            return count * 0.4 
+            
+        # Pounds (approx 0.45kg)
+        match_lb = re.search(r"(\d+(\.\d+)?)\s*(lb|lbs|pound)", q)
+        if match_lb:
+            return float(match_lb.group(1)) * 0.453
+            
+        # 2. Fallback: If just a number, assume it's kg (or maybe meals? let's be generous and say kg for impact)
+        # Or better, just look for the first number
+        match_num = re.search(r"(\d+(\.\d+)?)", q)
+        if match_num:
+            val = float(match_num.group(1))
+            # Heuristic: if val > 20, likely meals/grams? No, let's just default to kg if ambiguous to ensure non-zero impact.
+            return val
+            
         return 0.0
     except:
         return 0.0
