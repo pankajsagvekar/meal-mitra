@@ -1,5 +1,5 @@
-
 import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
     return (
@@ -7,24 +7,24 @@ const Footer = () => {
             <div className="container px-4 md:px-8 mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2">
+                        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                             <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
                                 <span className="text-white font-bold text-lg">M</span>
                             </div>
                             <span className="font-bold text-xl tracking-tight">Meal-Mitra</span>
-                        </div>
+                        </Link>
                         <p className="text-muted-foreground text-sm leading-relaxed">
-                            Connecting surplus food with communities in need. Join our mission to eliminate hunger and reduce food waste.
+                            Connecting  Surplus Food to Needy Hands
                         </p>
                     </div>
 
                     <div>
                         <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
                         <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li><a href="#" className="hover:text-primary transition-colors">About Us</a></li>
-                            <li><a href="#" className="hover:text-primary transition-colors">How It Works</a></li>
-                            <li><a href="#" className="hover:text-primary transition-colors">Impact</a></li>
-                            <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
+                            <li><Link to="/about" className="hover:text-primary transition-colors">About Us</Link></li>
+                            <li><Link to="/how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
+                            <li><Link to="/impact" className="hover:text-primary transition-colors">Impact</Link></li>
+                            <li><Link to="/help-support" className="hover:text-primary transition-colors">Contact</Link></li>
                         </ul>
                     </div>
 

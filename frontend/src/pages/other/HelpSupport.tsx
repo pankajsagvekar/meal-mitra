@@ -28,8 +28,8 @@ const HelpSupport = () => {
           </CardHeader>
           <CardContent className="space-y-2 text-gray-700">
             <p><strong>Project:</strong> Meal-Mitra</p>
-            <p><strong>Team:</strong> Full-Stack Development Team</p>
-            <p><strong>Purpose:</strong> Food Donation & Waste Reduction Platform</p>
+            <p><strong>Team:</strong> Team Meal Mitra</p>
+            <p><strong>Purpose:</strong>Connecting  Surplus Food to Needy Hands</p>
           </CardContent>
         </Card>
 
@@ -44,12 +44,12 @@ const HelpSupport = () => {
           <CardContent className="space-y-3 text-gray-700">
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-gray-500" />
-              <span>support@mealmitra.com</span>
+              <span>mealmitrahelp@gmail.com</span>
             </div>
 
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-gray-500" />
-              <span>+91 98765 43210</span>
+              <span>+91 84212 72019</span>
             </div>
 
             <p className="text-sm text-gray-500">

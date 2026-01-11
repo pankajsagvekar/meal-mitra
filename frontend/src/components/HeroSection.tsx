@@ -10,139 +10,103 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
     return (
-        <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden gradient-hero">
+        <section className="relative min-h-[60vh] pt-24 pb-12 flex items-center justify-center overflow-hidden gradient-hero">
             {/* Floating decorative elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
-                    className="absolute top-20 left-10 w-20 h-20 rounded-full bg-primary/40"
-                    animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-10 left-10 w-16 h-16 rounded-full bg-primary/30"
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 5, repeat: Infinity }}
                 />
                 <motion.div
-                    className="absolute top-40 right-20 w-16 h-16 rounded-full bg-secondary/40"
-                    animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                />
-                <motion.div
-                    className="absolute bottom-40 left-1/4 w-12 h-12 rounded-full bg-accent/40"
-                    animate={{ y: [0, -15, 0] }}
-                    transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                />
-                <motion.div
-                    className="absolute bottom-20 right-1/3 w-24 h-24 rounded-full bg-primary/20"
-                    animate={{ y: [0, 20, 0], scale: [1, 1.05, 1] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-20 right-10 w-12 h-12 rounded-full bg-secondary/30"
+                    animate={{ y: [0, 10, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
                 />
             </div>
 
             <div className="container px-4 relative z-10">
                 <motion.div
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="text-center max-w-3xl mx-auto"
+                    className="text-center max-w-2xl mx-auto"
                 >
                     <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ duration: 0.5, delay: 0.2, type: "spring" }}
-                        className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-orange-500 shadow-lg mb-8"
+                        className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-orange-500 shadow-md mb-6"
                     >
-                        <Utensils className="w-10 h-10 text-white" />
+                        <Utensils className="w-7 h-7 text-white" />
                     </motion.div>
-
 
                     {/* App name */}
                     <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.3 }}
-                        className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-4"
+                        className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground mb-3"
                     >
                         Meal<span className="text-primary"> Mitra</span>
                     </motion.h1>
 
                     {/* Tagline */}
                     <motion.p
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.4 }}
-                        className="text-xl md:text-2xl text-muted-foreground font-medium mb-8"
+                        className="text-lg md:text-xl text-muted-foreground font-medium mb-4"
                     >
                         No One Sleeps Hungry...
                     </motion.p>
 
                     {/* Description */}
                     <motion.p
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.5 }}
-                        className="text-muted-foreground max-w-xl mx-auto mb-10"
+                        className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto mb-8"
                     >
                         Join thousands of donors and NGOs working together to reduce food waste
                         and feed communities in need. Every meal matters.
                     </motion.p>
 
-                    {/* NGO Section */}
+                    {/* Main Actions */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5, delay: 0.7 }}
-                        className="mt-8 p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-orange-100 shadow-sm"
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.7 }}
+                        className="flex flex-wrap items-center justify-center gap-3 mt-6"
                     >
-                        <p className="text-sm font-semibold text-orange-600 mb-4 tracking-wide uppercase">
-                            Are You an NGO?
-                        </p>
-                        <div className="flex flex-wrap items-center justify-center gap-4">
-                            <Link to="/ngo/register">
-                                <Button className="bg-orange-600 hover:bg-orange-700 text-white shadow-md transition-all hover:scale-105">
-                                    Register as NGO
-                                </Button>
-                            </Link>
-                            <Link to="/ngo/login">
-                                <Button variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50 transition-all hover:scale-105">
-                                    NGO Login
-                                </Button>
-                            </Link>
-                        </div>
-
-                        <div className="mt-8 pt-8 border-t border-orange-100/50">
-                            <p className="text-sm font-semibold text-orange-600 mb-4 tracking-wide uppercase">
-                                Are You an Organization?
-                            </p>
-                            <div className="flex flex-wrap items-center justify-center gap-4">
-                                <Link to="/organisation/register">
-                                    <Button className="bg-orange-600 hover:bg-orange-700 text-white shadow-md transition-all hover:scale-105">
-                                        Register as Organization
-                                    </Button>
-                                </Link>
-                                <button onClick={() => onOpenAuth?.("login")}>
-                                    <Button variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50 transition-all hover:scale-105">
-                                        Organization Login
-                                    </Button>
-                                </button>
-                            </div>
-                        </div>
+                        <Button
+                            size="lg"
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-5 text-base rounded-xl shadow-lg shadow-orange-100 transition-all hover:scale-105 active:scale-95"
+                            onClick={() => onOpenAuth?.("register")}
+                        >
+                            Get Started
+                        </Button>
+                        
                     </motion.div>
 
                     {/* Stats preview */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.8 }}
-                        className="flex flex-wrap items-center justify-center gap-8 mt-16 text-muted-foreground"
+                        className="flex flex-wrap items-center justify-center gap-6 mt-12 text-muted-foreground"
                     >
                         <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-                            <span className="text-sm font-medium">12,450+ Meals Served</span>
+                            <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+                            <span className="text-xs font-medium">12,450+ Meals Served</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-secondary animate-pulse" />
-                            <span className="text-sm font-medium">85+ NGO Partners</span>
+                            <div className="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse" />
+                            <span className="text-xs font-medium">85+ NGO Partners</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-accent animate-pulse" />
-                            <span className="text-sm font-medium">3,200+ Donors</span>
+                            <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
+                            <span className="text-xs font-medium">3,200+ Donors</span>
                         </div>
                     </motion.div>
                 </motion.div>
