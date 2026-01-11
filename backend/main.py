@@ -862,7 +862,7 @@ async def forgot_password(
         return {"message": "Recovery email sent if the account exists"}
 
     token = serializer.dumps(email, salt=SALT)
-    reset_url = f"http://localhost:3000/reset-password?token={token}"
+    reset_url = f"https://meal-mitra-pi.vercel.app/reset-password?token={token}"
 
     message = MessageSchema(
         subject="Meal Mitra - Password Reset",
