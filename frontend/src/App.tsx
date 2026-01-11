@@ -2,6 +2,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import MainLayout from "@/components/layout/MainLayout";
 import NgoLayout from "@/components/layout/NgoLayout";
 import PublicLayout from "@/components/layout/PublicLayout";
+import PublicSidebarLayout from "@/components/layout/PublicSidebarLayout";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -56,8 +57,12 @@ const App = () => (
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/impact" element={<Impact />} />
             <Route path="/help-support" element={<HelpSupport />} />
-            <Route path="/claim-food" element={<ClaimFood />} />
             <Route path="*" element={<NotFound />} />
+          </Route>
+
+          {/* Public Routes with Sidebar (No Footer) */}
+          <Route element={<PublicSidebarLayout />}>
+            <Route path="/claim-food" element={<ClaimFood />} />
           </Route>
 
           {/* NGO Auth Routes (Stand-alone pages) */}
