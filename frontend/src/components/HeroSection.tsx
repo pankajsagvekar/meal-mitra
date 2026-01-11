@@ -86,15 +86,7 @@ const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
                         >
                             Get Started
                         </Button>
-                        <Link to="/claim-food">
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="border-orange-200 text-orange-600 px-6 py-5 text-base rounded-xl bg-white/50 backdrop-blur-sm transition-all hover:bg-orange-50 hover:scale-105 active:scale-95"
-                            >
-                                Find Food
-                            </Button>
-                        </Link>
+                        
                     </motion.div>
 
                     {/* Stats preview */}

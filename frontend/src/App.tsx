@@ -1,6 +1,7 @@
 import AdminLayout from "@/components/layout/AdminLayout";
 import MainLayout from "@/components/layout/MainLayout";
 import NgoLayout from "@/components/layout/NgoLayout";
+import PublicLayout from "@/components/layout/PublicLayout";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,7 +32,9 @@ import NgoRegister from "./pages/ngo/NgoRegister";
 import NotFound from "./pages/NotFound";
 import OrgDashboard from "./pages/organisation/OrgDashboard";
 import OrgRegister from "./pages/organisation/OrgRegister";
+import About from "./pages/other/About";
 import HelpSupport from "./pages/other/HelpSupport";
+import HowItWorks from "./pages/other/HowItWorks";
 import ClaimFood from "./pages/user/ClaimFood";
 
 const queryClient = new QueryClient();
@@ -43,13 +46,21 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public Routes with No Sidebar */}
-          <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          {/* Public Routes with Navbar and Footer */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/impact" element={<Impact />} />
+            <Route path="/help-support" element={<HelpSupport />} />
+            <Route path="/claim-food" element={<ClaimFood />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
 
-          {/* NGO Auth Routes */}
+          {/* NGO Auth Routes (Stand-alone pages) */}
           <Route path="/ngo/login" element={<NgoLogin />} />
           <Route path="/ngo/register" element={<NgoRegister />} />
           <Route path="/organisation/register" element={<OrgRegister />} />
@@ -59,12 +70,8 @@ const App = () => (
             <Route path="/user/dashboard" element={<UserDashboard />} />
             <Route path="/donate" element={<Donate />} />
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/impact" element={<Impact />} />
             <Route path="/my-donations" element={<MyDonation />} />
-            <Route path="/claim-food" element={<ClaimFood />} />
-            <Route path="/help-support" element={<HelpSupport />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
           </Route>
 
           {/* Admin Routes */}
