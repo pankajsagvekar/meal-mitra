@@ -14,7 +14,11 @@ interface Donation {
     food: string;
     quantity: string;
     location: string;
+    status?: string;
     safe_until?: string;
+    cooked_at?: string;
+    price?: number;
+    is_ngo_only?: boolean;
 }
 
 const AdminDonations = () => {
@@ -69,6 +73,12 @@ const AdminDonations = () => {
                                     <TableHead>Quantity</TableHead>
                                     <TableHead>Location</TableHead>
                                     <TableHead>User ID</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Safe Until</TableHead>
+                                    <TableHead>Cooked At</TableHead>
+                                    <TableHead>Price</TableHead>
+                                    <TableHead>NGO Only</TableHead>
+                                    <TableHead>Raw Text</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -80,6 +90,12 @@ const AdminDonations = () => {
                                         <TableCell>{donation.quantity}</TableCell>
                                         <TableCell>{donation.location}</TableCell>
                                         <TableCell>{donation.user_id}</TableCell>
+                                        <TableCell>{donation.status}</TableCell>
+                                        <TableCell>{donation.safe_until ?? "-"}</TableCell>
+                                        <TableCell>{donation.cooked_at ?? "-"}</TableCell>
+                                        <TableCell>{donation.price ?? 0}</TableCell>
+                                        <TableCell>{donation.is_ngo_only ? "Yes" : "No"}</TableCell>
+                                        <TableCell>{donation.raw_text}</TableCell>
                                         <TableCell className="flex items-center gap-2">
                                             <Link to={`/admin/donations/${donation.id}`}>
                                                 <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600">

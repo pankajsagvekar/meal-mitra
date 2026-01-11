@@ -8,10 +8,13 @@ import { toast } from "sonner";
 
 interface Donation {
     id: number;
-    title: string;
+    user_id: number;
+    food: string;
     quantity: string;
     status: string;
-    donor: string;
+    location: string;
+    raw_text: string;
+    price: number;
 }
 
 const ClaimFood = () => {
@@ -24,7 +27,7 @@ const ClaimFood = () => {
 
     const fetchDonations = async () => {
         try {
-            const response = await api.get("/donations/available");
+            const response = await api.get("/donations");
             setDonations(response.data);
         } catch (error) {
             console.error("Failed to fetch donations:", error);
@@ -77,8 +80,8 @@ const ClaimFood = () => {
                             <CardHeader className="pb-2">
                                 <div className="flex justify-between items-start">
                                     <Badge
-                                        variant={donation.status === "available" ? "default" : "secondary"}
-                                        className={donation.status === "available" ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}
+                                        variant={donation.status.toLowerCase() === "available" ? "default" : "secondary"}
+                                        className={donation.status.toLowerCase() === "available" ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}
                                     >
                                         {donation.status}
                                     </Badge>
@@ -87,7 +90,7 @@ const ClaimFood = () => {
                                     </span>
                                 </div>
                                 <CardTitle className="text-xl mt-2 group-hover:text-orange-600 transition-colors">
-                                    {donation.title}
+                                    {donation.food}
                                 </CardTitle>
                                 <CardDescription className="font-semibold text-orange-600">
                                     {donation.quantity}
@@ -97,16 +100,16 @@ const ClaimFood = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                         <Package className="h-4 w-4" />
-                                        <span>Donor: <strong>{donation.donor}</strong></span>
+                                        <span>User ID: <strong>{donation.user_id}</strong></span>
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                         <MapPin className="h-4 w-4" />
-                                        <span>Pick up at Donor Location</span>
+                                        <span>{donation.location}</span>
                                     </div>
                                 </div>
 
                                 <div className="pt-2">
-                                    {donation.status === "available" ? (
+                                    {donation.status.toLowerCase() === "available" ? (
                                         <Button
                                             onClick={() => handleClaim(donation.id)}
                                             className="w-full bg-orange-600 hover:bg-orange-700 text-white shadow-md shadow-orange-100"

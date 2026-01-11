@@ -15,6 +15,8 @@ interface Organization {
     verification_status: string;
     fssai_license: string;
     document_proof?: string;
+    address?: string;
+    phone_number?: string;
 }
 
 const VerifyOrganization = () => {
@@ -69,8 +71,11 @@ const VerifyOrganization = () => {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Name</TableHead>
+                                    <TableHead>Email</TableHead>
                                     <TableHead>Type</TableHead>
                                     <TableHead>FSSAI License</TableHead>
+                                    <TableHead>Address</TableHead>
+                                    <TableHead>Phone</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
@@ -79,8 +84,11 @@ const VerifyOrganization = () => {
                                 {orgs.map((org) => (
                                     <TableRow key={org.id}>
                                         <TableCell className="font-medium">{org.username}</TableCell>
+                                        <TableCell>{org.email}</TableCell>
                                         <TableCell>{org.role}</TableCell>
                                         <TableCell>{org.fssai_license}</TableCell>
+                                        <TableCell className="max-w-[150px] truncate">{org.address ?? "-"}</TableCell>
+                                        <TableCell>{org.phone_number ?? "-"}</TableCell>
                                         <TableCell>
                                             <Badge variant={
                                                 org.verification_status === "Approved" ? "default" :

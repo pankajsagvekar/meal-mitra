@@ -14,6 +14,7 @@ interface Donation {
     location: string;
     status: string;
     user_id: number;
+    price?: number;
 }
 
 const AdminDeleteDonations = () => {
@@ -73,6 +74,8 @@ const AdminDeleteDonations = () => {
                                     <TableHead>ID</TableHead>
                                     <TableHead>Food Item</TableHead>
                                     <TableHead>Quantity</TableHead>
+                                    <TableHead>Location</TableHead>
+                                    <TableHead>Price</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Donor ID</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
@@ -84,6 +87,8 @@ const AdminDeleteDonations = () => {
                                         <TableCell className="font-mono text-xs">{donation.id}</TableCell>
                                         <TableCell className="font-medium capitalize">{donation.food}</TableCell>
                                         <TableCell>{donation.quantity}</TableCell>
+                                        <TableCell className="max-w-[150px] truncate">{donation.location}</TableCell>
+                                        <TableCell>₹{donation.price ?? 0}</TableCell>
                                         <TableCell>
                                             <Badge variant="secondary">{donation.status}</Badge>
                                         </TableCell>

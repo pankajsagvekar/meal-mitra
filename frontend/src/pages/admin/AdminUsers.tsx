@@ -12,6 +12,8 @@ interface User {
     username: string;
     email: string;
     is_admin: boolean;
+    address?: string;
+    phone_number?: string;
 }
 
 const AdminUsers = () => {
@@ -64,6 +66,8 @@ const AdminUsers = () => {
                                     <TableHead>ID</TableHead>
                                     <TableHead>Username</TableHead>
                                     <TableHead>Email</TableHead>
+                                    <TableHead>Address</TableHead>
+                                    <TableHead>Phone</TableHead>
                                     <TableHead>Role</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
@@ -74,6 +78,8 @@ const AdminUsers = () => {
                                         <TableCell>{user.id}</TableCell>
                                         <TableCell className="font-medium">{user.username}</TableCell>
                                         <TableCell>{user.email}</TableCell>
+                                        <TableCell className="max-w-[150px] truncate">{user.address ?? "-"}</TableCell>
+                                        <TableCell>{user.phone_number ?? "-"}</TableCell>
                                         <TableCell>
                                             {user.is_admin ? (
                                                 <Badge className="bg-primary hover:bg-primary/90">Admin</Badge>

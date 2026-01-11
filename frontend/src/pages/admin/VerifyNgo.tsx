@@ -15,6 +15,8 @@ interface NGO {
     registration_status: string;
     id_proof: string;
     address_proof: string;
+    address?: string;
+    phone_number?: string;
 }
 
 const VerifyNgo = () => {
@@ -69,7 +71,10 @@ const VerifyNgo = () => {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Name</TableHead>
+                                    <TableHead>Email</TableHead>
                                     <TableHead>Type</TableHead>
+                                    <TableHead>Address</TableHead>
+                                    <TableHead>Phone</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Proofs</TableHead>
                                     <TableHead>Actions</TableHead>
@@ -79,7 +84,10 @@ const VerifyNgo = () => {
                                 {ngos.map((ngo) => (
                                     <TableRow key={ngo.id}>
                                         <TableCell className="font-medium">{ngo.name}</TableCell>
+                                        <TableCell>{ngo.email}</TableCell>
                                         <TableCell>{ngo.ngo_type}</TableCell>
+                                        <TableCell className="max-w-[150px] truncate">{ngo.address ?? "-"}</TableCell>
+                                        <TableCell>{ngo.phone_number ?? "-"}</TableCell>
                                         <TableCell>
                                             <Badge variant={
                                                 ngo.registration_status === "Approved" ? "default" :

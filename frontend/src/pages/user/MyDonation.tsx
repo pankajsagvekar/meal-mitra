@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import api from "@/lib/api";
-import { formatDateTime } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Clock, MapPin, Package } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -13,6 +13,8 @@ interface Donation {
   quantity?: string;
   location?: string;
   safe_until?: string;
+  status?: string;
+  price?: number;
 }
 
 const container = {
@@ -118,8 +120,13 @@ const MyDonation = () => {
                           <h3 className="font-bold text-xl text-foreground capitalize line-clamp-1" title={d.food}>
                             {d.food || "Unknown Food"}
                           </h3>
-                          <span className="inline-flex items-center px-2.5 py-0.5 mt-2 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Active
+                          <span className={cn(
+                            "inline-flex items-center px-2.5 py-0.5 mt-2 rounded-full text-xs font-medium",
+                            d.status?.toLowerCase() === "available" ? "bg-green-100 text-green-800" :
+                              d.status?.toLowerCase() === "claimed" ? "bg-blue-100 text-blue-800" :
+                                "bg-gray-100 text-gray-800"
+                          )}>
+                            {d.status || "Unknown"}
                           </span>
                         </div>
                         <div className="bg-orange-50 p-2.5 rounded-xl group-hover:bg-orange-100 transition-colors">
@@ -145,6 +152,12 @@ const MyDonation = () => {
                             <Clock className="w-4 h-4 mt-0.5 shrink-0" />
                             <span className="font-medium text-foreground/80">Safe Until:</span>
                             <span className="truncate">{formatDateTime(d.safe_until)}</span>
+                          </div>
+                        )}
+
+                        {d.price !== undefined && d.price > 0 && (
+                          <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                            <span className="font-bold text-orange-600">₹{d.price}</span>
                           </div>
                         )}
                       </div>

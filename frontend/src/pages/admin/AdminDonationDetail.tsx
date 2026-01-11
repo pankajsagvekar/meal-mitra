@@ -12,7 +12,11 @@ interface Donation {
     food: string;
     quantity: string;
     location: string;
+    status: string;
     safe_until?: string;
+    cooked_at?: string;
+    price?: number;
+    is_ngo_only?: boolean;
     lat?: string;
     lng?: string;
 }
@@ -98,6 +102,31 @@ const AdminDonationDetail = () => {
                                 <MapPin className="w-4 h-4 text-gray-400" />
                                 {donation.location}
                             </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-500">Status</label>
+                            <div className="text-lg font-semibold text-primary">{donation.status}</div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-500">Safe Until</label>
+                            <div className="text-lg">{donation.safe_until ?? "-"}</div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-500">Cooked At</label>
+                            <div className="text-lg">{donation.cooked_at ?? "-"}</div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-500">Price (INR)</label>
+                            <div className="text-lg">₹{donation.price ?? 0}</div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-gray-500">NGO Only</label>
+                            <div className="text-lg">{donation.is_ngo_only ? "Yes" : "No"}</div>
                         </div>
 
                         <div className="space-y-1">
