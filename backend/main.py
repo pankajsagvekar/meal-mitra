@@ -1577,7 +1577,7 @@ def chat_bot(
             user_name = user.username
             impact = calculate_user_impact(user.id, db)
             recent_donations = db.query(Donation).filter(Donation.user_id == user.id).order_by(Donation.id.desc()).limit(3).all()
-            donation_history = "\n".join([f"- {d.food} ({d.quantity}) on {d.created_at}" for d in recent_donations]) if recent_donations else "No recent donations."
+            donation_history = "\n".join([f"- {d.food} ({d.quantity}) cooked at {d.cooked_at or 'Unknown Time'}" for d in recent_donations]) if recent_donations else "No recent donations."
             
             context = f"""
             User: {user.username}
